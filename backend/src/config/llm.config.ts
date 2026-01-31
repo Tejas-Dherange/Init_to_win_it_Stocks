@@ -6,7 +6,7 @@ export const groqClient = new Groq({
 });
 
 export const llmConfig = {
-    model: 'mixtral-8x7b-32768',
+    model: 'llama-3.3-70b-versatile',
     temperature: 0.3,
     maxTokens: 1024,
     topP: 1,

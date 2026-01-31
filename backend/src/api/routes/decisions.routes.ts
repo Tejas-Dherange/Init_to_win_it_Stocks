@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { MasterAgent } from '../../agents/master/MasterAgent';
 import { csvDataLoader } from '../../services/data-sources/CSVDataLoader';
 import { logger } from '../../utils/logger';
+import prisma from '../../config/database.config';
+import { environment } from '../../config/environment';
 
 const router = Router();
 const masterAgent = new MasterAgent();
@@ -29,6 +31,20 @@ router.post('/generate', async (req, res, next) => {
                 continue;
             }
 
+            // Fetch real portfolio ID from DB for FK constraint
+            let portfolioId = position.symbol; // Fallback
+            if (environment.databaseUrl) {
+                const dbPortfolio = await prisma.portfolio.findFirst({
+                    where: {
+                        userId: userId,
+                        symbol: position.symbol,
+                    },
+                });
+                if (dbPortfolio) {
+                    portfolioId = dbPortfolio.id;
+                }
+            }
+
             // Run complete workflow
             const workflowResult = await masterAgent.executeWorkflow({
                 userId,
@@ -48,7 +64,7 @@ router.post('/generate', async (req, res, next) => {
                     sector: tickData.sector,
                 },
                 portfolioPosition: {
-                    id: position.symbol, // Using symbol as ID for demo
+                    id: portfolioId, // Use real UUID or symbol fallback
                     symbol: position.symbol,
                     quantity: parseInt(position.quantity, 10),
                     entryPrice: parseFloat(position.entry_price),

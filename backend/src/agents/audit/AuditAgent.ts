@@ -53,8 +53,8 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
 
             logger.debug(`Audit log created for ${input.agentName}.${input.operation}`);
         } catch (error) {
-            logger.error('Failed to create audit log:', error);
-            throw error;
+            // Non-blocking error - just log warning
+            logger.warn('Failed to create audit log (DB likely not configured):', error);
         }
     }
 
@@ -89,8 +89,9 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
             logger.info(`Decision logged: ${decision.id}`);
             return decision.id;
         } catch (error) {
-            logger.error('Failed to log decision:', error);
-            throw error;
+            logger.warn('Failed to log decision (DB likely not configured):', error);
+            // Return a temporary ID so flow works
+            return `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         }
     }
 
@@ -114,7 +115,7 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
 
             logger.info(`Logged ${alternatives.length} alternatives for decision ${decisionId}`);
         } catch (error) {
-            logger.error('Failed to log alternatives:', error);
+            logger.warn('Failed to log alternatives:', error);
         }
     }
 
@@ -141,7 +142,7 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
 
             logger.debug(`Chat message logged for user ${params.userId}`);
         } catch (error) {
-            logger.error('Failed to log chat message:', error);
+            logger.warn('Failed to log chat message:', error);
         }
     }
 

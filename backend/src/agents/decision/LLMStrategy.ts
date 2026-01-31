@@ -1,10 +1,10 @@
-import { groqClient, llmConfig } from '../../config/llm.config';
+import { groqService } from '../../services/llm/groq.service';
 import { DECISION_RATIONALE_PROMPT, substitutePromptVariables } from './prompts';
 import { logger } from '../../utils/logger';
 import { ActionType } from '../../utils/constants';
 
 /**
- * LLM-powered decision strategy using Groq API
+ * LLM-powered decision strategy using GroqService
  */
 export class LLMStrategy {
     /**
@@ -32,7 +32,7 @@ export class LLMStrategy {
             logger.info(`Generating LLM rationale for ${context.symbol}`);
 
             // Prepare prompt with variables
-            const prompt = substitutePromptVariables(DECISION_RATIONALE_PROMPT, {
+            const promptContent = substitutePromptVariables(DECISION_RATIONALE_PROMPT, {
                 symbol: context.symbol,
                 sector: context.sector || 'Unknown',
                 current_price: context.currentPrice.toFixed(2),
@@ -52,28 +52,14 @@ export class LLMStrategy {
                 urgency: context.urgency,
             });
 
-            // Call Groq API
-            const completion = await groqClient.chat.completions.create({
-                model: llmConfig.model,
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a professional financial advisor specializing in Indian stock markets.',
-                    },
-                    {
-                        role: 'user',
-                        content: prompt,
-                    },
-                ],
-                temperature: llmConfig.temperature,
-                max_tokens: llmConfig.maxTokens,
-                top_p: llmConfig.topP,
-            });
-
-            const rationale = completion.choices[0]?.message?.content || 'Unable to generate rationale';
+            // Call Groq Service
+            const rationale = await groqService.generateCompletion(
+                promptContent,
+                'You are a professional financial advisor specializing in Indian stock markets.'
+            );
 
             logger.info(`LLM rationale generated successfully for ${context.symbol}`);
-            return rationale.trim();
+            return rationale.trim() || 'Unable to generate rationale';
         } catch (error) {
             logger.error('Failed to generate LLM rationale:', error);
             // Fallback to rule-based rationale
@@ -122,17 +108,7 @@ export class LLMStrategy {
      * Check if LLM is available
      */
     async healthCheck(): Promise<boolean> {
-        try {
-            await groqClient.chat.completions.create({
-                model: llmConfig.model,
-                messages: [{ role: 'user', content: 'Health check' }],
-                max_tokens: 10,
-            });
-            return true;
-        } catch (error) {
-            logger.error('LLM health check failed:', error);
-            return false;
-        }
+        return groqService.healthCheck();
     }
 }
 
