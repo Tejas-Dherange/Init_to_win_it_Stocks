@@ -1,0 +1,238 @@
+import { BaseAgent } from '../base/BaseAgent';
+import prisma from '../../config/database.config';
+import { logger } from '../../utils/logger';
+
+export interface AuditInput {
+    agentName: string;
+    operation: string;
+    input?: any;
+    output?: any;
+    executionTime: number;
+    success: boolean;
+    error?: string;
+    llmTraceId?: string;
+}
+
+/**
+ * AuditAgent - Logs all agent actions and decisions
+ */
+export class AuditAgent extends BaseAgent<AuditInput, void> {
+    constructor() {
+        super('AuditAgent');
+    }
+
+    /**
+     * Validate audit input
+     */
+    protected validate(input: AuditInput): boolean {
+        if (!input || !input.agentName || !input.operation) {
+            logger.warn('Invalid audit input');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Process audit logging
+     */
+    protected async process(input: AuditInput): Promise<void> {
+        try {
+            // Log to database
+            await prisma.auditLog.create({
+                data: {
+                    agentName: input.agentName,
+                    operation: input.operation,
+                    input: input.input || {},
+                    output: input.output || {},
+                    executionTime: input.executionTime,
+                    success: input.success,
+                    error: input.error,
+                },
+            });
+
+            logger.debug(`Audit log created for ${input.agentName}.${input.operation}`);
+        } catch (error) {
+            logger.error('Failed to create audit log:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Log decision
+     */
+    async logDecision(params: {
+        userId: string;
+        portfolioId: string;
+        symbol: string;
+        action: string;
+        rationale: string;
+        urgency: number;
+        riskScore: number;
+        llmTraceId?: string;
+    }): Promise<string> {
+        try {
+            const decision = await prisma.decision.create({
+                data: {
+                    userId: params.userId,
+                    portfolioId: params.portfolioId,
+                    symbol: params.symbol,
+                    action: params.action,
+                    rationale: params.rationale,
+                    urgency: params.urgency,
+                    riskScore: params.riskScore,
+                    status: 'pending',
+                    llmTraceId: params.llmTraceId,
+                },
+            });
+
+            logger.info(`Decision logged: ${decision.id}`);
+            return decision.id;
+        } catch (error) {
+            logger.error('Failed to log decision:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Log alternatives
+     */
+    async logAlternatives(decisionId: string, alternatives: any[]): Promise<void> {
+        try {
+            await prisma.alternative.createMany({
+                data: alternatives.map((alt) => ({
+                    decisionId,
+                    symbol: alt.symbol,
+                    reason: alt.reason,
+                    riskScore: alt.riskScore,
+                    sentiment: alt.sentiment,
+                    score: alt.score,
+                    sector: alt.sector,
+                    currentPrice: alt.currentPrice,
+                })),
+            });
+
+            logger.info(`Logged ${alternatives.length} alternatives for decision ${decisionId}`);
+        } catch (error) {
+            logger.error('Failed to log alternatives:', error);
+        }
+    }
+
+    /**
+     * Log chat message
+     */
+    async logChatMessage(params: {
+        userId: string;
+        symbol?: string;
+        message: string;
+        sender: 'user' | 'bot';
+        llmTraceId?: string;
+    }): Promise<void> {
+        try {
+            await prisma.chatMessage.create({
+                data: {
+                    userId: params.userId,
+                    symbol: params.symbol,
+                    message: params.message,
+                    sender: params.sender,
+                    llmTraceId: params.llmTraceId,
+                },
+            });
+
+            logger.debug(`Chat message logged for user ${params.userId}`);
+        } catch (error) {
+            logger.error('Failed to log chat message:', error);
+        }
+    }
+
+    /**
+     * Get audit trail for a timeframe
+     */
+    async getAuditTrail(params: {
+        agentName?: string;
+        startTime: Date;
+        endTime: Date;
+        limit?: number;
+    }): Promise<any[]> {
+        try {
+            const logs = await prisma.auditLog.findMany({
+                where: {
+                    agentName: params.agentName,
+                    timestamp: {
+                        gte: params.startTime,
+                        lte: params.endTime,
+                    },
+                },
+                orderBy: {
+                    timestamp: 'desc',
+                },
+                take: params.limit || 100,
+            });
+
+            return logs;
+        } catch (error) {
+            logger.error('Failed to retrieve audit trail:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Generate compliance report
+     */
+    async generateComplianceReport(date: Date): Promise<{
+        totalDecisions: number;
+        approvedDecisions: number;
+        rejectedDecisions: number;
+        pendingDecisions: number;
+        avgResponseTime: number;
+    }> {
+        try {
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            const decisions = await prisma.decision.findMany({
+                where: {
+                    createdAt: {
+                        gte: startOfDay,
+                        lte: endOfDay,
+                    },
+                },
+            });
+
+            const totalDecisions = decisions.length;
+            const approvedDecisions = decisions.filter((d) => d.status === 'approved').length;
+            const rejectedDecisions = decisions.filter((d) => d.status === 'rejected').length;
+            const pendingDecisions = decisions.filter((d) => d.status === 'pending').length;
+
+            // Calculate average response time for approved/rejected decisions
+            const respondedDecisions = decisions.filter(
+                (d) => d.status === 'approved' || d.status === 'rejected'
+            );
+
+            let avgResponseTime = 0;
+            if (respondedDecisions.length > 0) {
+                const totalResponseTime = respondedDecisions.reduce((sum, d) => {
+                    const responseTime = d.updatedAt.getTime() - d.createdAt.getTime();
+                    return sum + responseTime;
+                }, 0);
+                avgResponseTime = totalResponseTime / respondedDecisions.length / 1000; // Convert to seconds
+            }
+
+            return {
+                totalDecisions,
+                approvedDecisions,
+                rejectedDecisions,
+                pendingDecisions,
+                avgResponseTime,
+            };
+        } catch (error) {
+            logger.error('Failed to generate compliance report:', error);
+            throw error;
+        }
+    }
+}
+
+export default AuditAgent;

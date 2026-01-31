@@ -1,0 +1,21 @@
+symbol,date,headline,sentiment_score,source,published_at
+RELIANCE,2026-01-31,Reliance Industries announces strong Q3 results with 12% revenue growth,0.78,Economic Times,2026-01-31 09:30:00
+RELIANCE,2026-01-30,RIL expands retail footprint with 200 new stores across India,0.65,Business Standard,2026-01-30 14:15:00
+TCS,2026-01-31,TCS wins $500M deal from European banking giant,0.82,Mint,2026-01-31 10:45:00
+TCS,2026-01-29,Analysts upgrade TCS on strong deal pipeline and margin expansion,0.71,CNBC,2026-01-29 16:20:00
+INFY,2026-01-30,Infosys reports robust Q3 earnings beating street estimates,0.76,Reuters,2026-01-30 11:00:00
+HDFCBANK,2026-01-31,HDFC Bank maintains asset quality with lowest NPA in sector,0.68,Bloomberg,2026-01-31 08:30:00
+HDFCBANK,2026-01-28,RBI approves HDFC Bank merger completion benefiting shareholders,0.72,Financial Express,2026-01-28 12:00:00
+ICICIBANK,2026-01-30,ICICI Bank Q3 profit jumps 25% YoY on strong loan growth,0.74,Economic Times,2026-01-30 09:15:00
+SBIN,2026-01-29,SBI reduces interest rates on home loans to boost demand,0.31,Hindu Business Line,2026-01-29 13:45:00
+SBIN,2026-01-27,Concerns over SBI's rising corporate NPAs amid economic slowdown,-0.42,Mint,2026-01-27 15:30:00
+BHARTIARTL,2026-01-31,Airtel 5G rollout accelerates with 80% population coverage,0.69,Telecom Times,2026-01-31 11:30:00
+ITC,2026-01-30,ITC Hotels division shows strong recovery post-pandemic,0.58,Business Line,2026-01-30 10:00:00
+MARUTI,2026-01-29,Maruti Suzuki launches 3 new EV models targeting mass market,0.64,Auto News,2026-01-29 14:30:00
+TATAMOTORS,2026-01-28,Tata Motors EV sales decline 8% in January due to competition,-0.28,ET Auto,2026-01-28 16:00:00
+TATASTEEL,2026-01-27,Weak global steel demand impacts Tata Steel's Q3 performance,-0.55,Steel Today,2026-01-27 12:30:00
+SUNPHARMA,2026-01-31,Sun Pharma gets USFDA approval for key generic drug,0.81,Pharma Mirror,2026-01-31 13:00:00
+DRREDDY,2026-01-30,Dr Reddy's launches biosimilar in European markets,0.73,Pharma Times,2026-01-30 15:45:00
+BAJFINANCE,2026-01-29,Bajaj Finance asset quality concerns rise with higher delinquencies,-0.38,Financial Times,2026-01-29 11:15:00
+COALINDIA,2026-01-28,Coal India production drops 5% amid regulatory constraints,-0.29,Energy News,2026-01-28 09:30:00
+NTPC,2026-01-27,NTPC commits to 60GW renewable energy capacity by 2032,0.52,Power Line,2026-01-27 14:00:00
