@@ -18,7 +18,7 @@ export const useChatService = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${API_URL}/chat/${symbol}`);
+            const response = await axios.get(`${API_URL}/api/v1/chat/${symbol}`);
             return response.data.data.messages;
         } catch (err: any) {
             const errorMessage = err.response?.data?.message || 'Failed to load chat history';
@@ -33,7 +33,7 @@ export const useChatService = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.post(`${API_URL}/chat/${symbol}`, {
+            const response = await axios.post(`${API_URL}/api/v1/chat/${symbol}`, {
                 message,
             });
             return response.data.data;

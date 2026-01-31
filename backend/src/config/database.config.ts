@@ -11,7 +11,7 @@ const prismaClientSingleton = () => {
 
     try {
         return new PrismaClient({
-            log: environment.nodeEnv === 'development' ? ['query', 'error', 'warn'] : ['error'],
+            // log: environment.nodeEnv === 'development' ? ['query', 'error', 'warn'] : ['error'],
             errorFormat: 'pretty',
         });
     } catch (error) {

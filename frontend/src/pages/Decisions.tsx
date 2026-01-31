@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, Zap } from 'lucide-react';
 import DecisionCard from '../components/decisions/DecisionCard';
 import ConfirmationDialog from '../components/decisions/ConfirmationDialog';
 import { useDecisionActions } from '../hooks/useDecisionActions';
+import { useDecisionStore } from '../store/decisionStore';
+import { Button } from '../components/common/Button';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
@@ -27,6 +29,7 @@ const Decisions: React.FC = () => {
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     const { confirmDecision, rejectDecision, getPendingActions } = useDecisionActions();
+    const { generateDecisions, loading: generating, error } = useDecisionStore();
 
     useEffect(() => {
         fetchDecisions();
@@ -34,15 +37,30 @@ const Decisions: React.FC = () => {
 
     const fetchDecisions = async () => {
         try {
-            // Fetch all decisions (you can add pagination later)
-            const response = await axios.get(`${API_URL}/decisions/generate`);
-            // For now, we'll use pending actions as a demo
-            const pending = await getPendingActions();
-            setDecisions(pending || []);
+            // Fetch ALL decisions (history + pending) from the main decisions endpoint
+            // We use decisionService directly here as it maps to the correct endpoint
+            const allDecisions = await import('../services/decision.service').then(m => m.decisionService.getDecisions());
+            setDecisions(allDecisions || []);
         } catch (error) {
             console.error('Failed to fetch decisions:', error);
+            // Fallback: try pending actions if main fetch fails
+            try {
+                const pending = await getPendingActions();
+                setDecisions(pending || []);
+            } catch (fallbackError) {
+                console.error('Fallback fetch failed:', fallbackError);
+            }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleGenerateDecisions = async () => {
+        try {
+            await generateDecisions();
+            await fetchDecisions(); // Refresh the decisions list
+        } catch (error) {
+            console.error('Failed to generate decisions:', error);
         }
     };
 
@@ -100,7 +118,24 @@ const Decisions: React.FC = () => {
                         {pendingCount} pending decision{pendingCount !== 1 ? 's' : ''} awaiting confirmation
                     </p>
                 </div>
+                <Button
+                    onClick={handleGenerateDecisions}
+                    disabled={generating}
+                    variant="primary"
+                    className="flex items-center gap-2"
+                >
+                    <Zap className="w-4 h-4" />
+                    {generating ? 'Generating...' : 'Generate Decisions'}
+                </Button>
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <strong className="font-bold">Error: </strong>
+                    <span>{error}</span>
+                </div>
+            )}
 
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-sm border p-4">

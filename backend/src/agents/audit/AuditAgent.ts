@@ -61,7 +61,16 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
     /**
      * Log decision
      */
-    async logDecision(params: {
+    async logDecision({
+        userId,
+        portfolioId,
+        symbol,
+        action,
+        rationale,
+        urgency,
+        riskScore,
+        llmTraceId
+    }: {
         userId: string;
         portfolioId: string;
         symbol: string;
@@ -72,26 +81,44 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
         llmTraceId?: string;
     }): Promise<string> {
         try {
-            const decision = await prisma.decision.create({
-                data: {
-                    userId: params.userId,
-                    portfolioId: params.portfolioId,
-                    symbol: params.symbol,
-                    action: params.action,
-                    rationale: params.rationale,
-                    urgency: params.urgency,
-                    riskScore: params.riskScore,
-                    status: 'pending',
-                    llmTraceId: params.llmTraceId,
-                },
+            // First, ensure the portfolio exists, or create a dummy record
+            let portfolio = await prisma.portfolio.findFirst({
+                where: { symbol }
             });
 
-            logger.info(`Decision logged: ${decision.id}`);
+            // Fallback: Try removing .NS suffix (e.g. TCS.NS -> TCS)
+            // Database stores raw symbols (TCS), workflow uses NSE symbols (TCS.NS)
+            if (!portfolio && symbol.endsWith('.NS')) {
+                const rawSymbol = symbol.replace('.NS', '');
+                logger.info(`Trying fallback portfolio lookup for ${rawSymbol}`);
+                portfolio = await prisma.portfolio.findFirst({
+                    where: { symbol: rawSymbol }
+                });
+            }
+
+            // If no portfolio found, skip decision logging (not critical)
+            if (!portfolio) {
+                logger.warn(`Portfolio not found for ${symbol} (or ${symbol.replace('.NS', '')}), skipping decision log`);
+                return 'skipped-no-portfolio';
+            }
+
+            const decision = await prisma.decision.create({
+                data: {
+                    userId, // Required by schema
+                    portfolioId: portfolio.id,
+                    symbol: portfolio.symbol,
+                    action,
+                    rationale,
+                    urgency,
+                    riskScore,
+                    llmTraceId,
+                    createdAt: new Date(),
+                }
+            });
             return decision.id;
         } catch (error) {
             logger.warn('Failed to log decision (DB likely not configured):', error);
-            // Return a temporary ID so flow works
-            return `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            return 'error';
         }
     }
 

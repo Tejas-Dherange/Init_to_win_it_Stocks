@@ -14,6 +14,7 @@ async function main() {
         create: {
             id: userId,
             email: 'demo@riskmind.ai',
+            clerkId: 'demo_user_clerk_id', // Added dummy ID to satisfy DB constraint
             name: 'Demo Trader',
             password: 'hashed_password_here', // In production, hash this!
             riskTolerance: 0.6,

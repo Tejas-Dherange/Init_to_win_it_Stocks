@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import { Send, Loader2, AlertCircle } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { useChatService } from '../../hooks/useChatService';
 
@@ -14,43 +14,59 @@ interface Message {
     timestamp: string;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ symbol }) => {
+export interface ChatWindowRef {
+    sendQuickMessage: (message: string) => Promise<void>;
+}
+
+const ChatWindow = forwardRef<ChatWindowRef, ChatWindowProps>(({ symbol }, ref) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputMessage, setInputMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const { loadHistory, sendMessage, loading } = useChatService();
+    const { loadHistory, sendMessage, loading, error } = useChatService();
+
+    // Expose sendQuickMessage to parent via ref
+    useImperativeHandle(ref, () => ({
+        sendQuickMessage: async (message: string) => {
+            await handleSendMessage(message);
+        },
+    }));
 
     useEffect(() => {
         // Load chat history when symbol changes
         const fetchHistory = async () => {
             try {
+                setErrorMessage(null);
                 const history = await loadHistory(symbol);
                 setMessages(history);
             } catch (error) {
                 console.error('Failed to load chat history:', error);
+                setErrorMessage('Failed to load chat history');
             }
         };
         fetchHistory();
-    }, [symbol]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [symbol]); // Only depend on symbol to avoid infinite loop
 
     useEffect(() => {
         // Auto-scroll to bottom when new messages arrive
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSendMessage = async () => {
-        if (!inputMessage.trim() || loading) return;
+    const handleSendMessage = async (messageText?: string) => {
+        const textToSend = messageText || inputMessage.trim();
+        if (!textToSend || loading) return;
 
-        const userMessageText = inputMessage.trim();
         setInputMessage('');
+        setErrorMessage(null);
 
         try {
-            const result = await sendMessage(symbol, userMessageText);
+            const result = await sendMessage(symbol, textToSend);
             // Add both user and assistant messages
             setMessages((prev) => [...prev, result.userMessage, result.assistantMessage]);
         } catch (error) {
             console.error('Failed to send message:', error);
-            // Optionally show error toast
+            setErrorMessage('Failed to send message. Please try again.');
         }
     };
 
@@ -68,6 +84,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ symbol }) => {
                 <h3 className="text-lg font-semibold text-gray-900">Chat: {symbol}</h3>
                 <p className="text-sm text-gray-500">Ask questions about this position</p>
             </div>
+
+            {/* Error Banner */}
+            {(errorMessage || error) && (
+                <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <p className="text-sm text-red-700">{errorMessage || error}</p>
+                    <button
+                        onClick={() => setErrorMessage(null)}
+                        className="ml-auto text-red-600 hover:text-red-800"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -109,7 +139,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ symbol }) => {
                         disabled={loading}
                     />
                     <button
-                        onClick={handleSendMessage}
+                        onClick={() => handleSendMessage()}
                         disabled={!inputMessage.trim() || loading}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                     >
@@ -119,6 +149,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ symbol }) => {
             </div>
         </div>
     );
-};
+});
+
+ChatWindow.displayName = 'ChatWindow';
 
 export default ChatWindow;

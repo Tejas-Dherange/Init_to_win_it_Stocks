@@ -21,6 +21,7 @@ router.get('/', async (req, res, next) => {
             const currentTick = stockTicks.find((t) => t.symbol === position.symbol);
 
             return {
+                id: position.symbol, // Use symbol as ID for frontend
                 symbol: position.symbol,
                 quantity: parseInt(position.quantity, 10),
                 entryPrice: parseFloat(position.entry_price),
@@ -28,6 +29,7 @@ router.get('/', async (req, res, next) => {
                 pnl: parseFloat(position.pnl),
                 pnlPercent: parseFloat(position.pnl_percent),
                 riskScore: parseFloat(position.risk_score),
+                riskLevel: parseFloat(position.risk_score), // Frontend expects riskLevel
                 exposure: parseFloat(position.exposure),
                 sector: position.sector,
             };

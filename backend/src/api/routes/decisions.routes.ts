@@ -16,14 +16,18 @@ router.post('/generate', async (req, res, next) => {
     try {
         const userId = '1'; // Demo user
 
-        // Load portfolio
+        // Load portfolio - LIMIT TO 2 STOCKS to avoid Gemini rate limits (5 req/min)
         const portfolioData = await csvDataLoader.loadPortfolio(userId);
         const stockTicks = await csvDataLoader.loadStockTicks();
+
+        // LIMIT: Only process first 2 positions to stay under rate limit
+        const limitedPortfolio = portfolioData.slice(0, 2);
+        logger.info(`\n⚠️  Processing ${limitedPortfolio.length} stocks (limited for rate limits)`);
 
         const decisions = [];
 
         // Process each position
-        for (const position of portfolioData) {
+        for (const position of limitedPortfolio) {
             const tickData = stockTicks.find((t) => t.symbol === position.symbol);
 
             if (!tickData) {
@@ -104,13 +108,27 @@ router.post('/generate', async (req, res, next) => {
  */
 router.get('/', async (req, res, next) => {
     try {
-        // For demo, redirect to generate endpoint
+        const userId = '1'; // Demo user
+
+        const decisions = await prisma.decision.findMany({
+            where: {
+                userId,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+            include: {
+                portfolio: true,
+            }
+        });
+
         res.json({
             success: true,
-            message: 'Use POST /decisions/generate to create decisions',
-            data: [],
+            data: decisions,
+            count: decisions.length,
         });
     } catch (error) {
+        logger.error('Failed to fetch decisions:', error);
         next(error);
     }
 });
