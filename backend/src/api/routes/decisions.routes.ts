@@ -42,6 +42,10 @@ router.post('/generate', requireAuth, async (req, res, next) => {
         // Load global simulated stock ticks
         const stockTicks = await csvDataLoader.loadStockTicks();
 
+        // LIMIT: Only process first 2 positions to stay under rate limit
+        const limitedPortfolio = portfolioData.slice(0, 2);
+        logger.info(`\n⚠️  Processing ${limitedPortfolio.length} stocks (limited for rate limits)`);
+
         const decisions = [];
 
         // Process each position

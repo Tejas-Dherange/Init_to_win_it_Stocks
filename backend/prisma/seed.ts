@@ -12,6 +12,7 @@ async function main() {
         create: {
             id: userId,
             email: 'tejasdivekar9057@gmail.com',
+            clerkId: 'demo_user_clerk_id', // Added dummy ID to satisfy DB constraint
             clerkId: 'user_demo_tejas_9057', // Placeholder for seeding
             name: 'Tejas Divekar',
             riskTolerance: 0.6,

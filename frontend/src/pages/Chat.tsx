@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { MessageSquare } from 'lucide-react';
 import ChatWindow from '../components/chat/ChatWindow';
+import type { ChatWindowRef } from '../components/chat/ChatWindow';
 
 const Chat: React.FC = () => {
     const [selectedSymbol, setSelectedSymbol] = useState<string>('TCS');
+    const chatWindowRef = useRef<ChatWindowRef>(null);
 
     // In a real app, this would come from the portfolio
     const stocksWithChats = ['TCS', 'INFY', 'RELIANCE', 'HDFC', 'ICICI'];
@@ -15,6 +17,10 @@ const Chat: React.FC = () => {
         'What are the key risk factors?',
         'How does this compare to my other positions?',
     ];
+
+    const handleQuickQuestion = (question: string) => {
+        chatWindowRef.current?.sendQuickMessage(question);
+    };
 
     return (
         <div className="p-6 h-[calc(100vh-4rem)]">
@@ -28,8 +34,8 @@ const Chat: React.FC = () => {
                                 key={symbol}
                                 onClick={() => setSelectedSymbol(symbol)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${selectedSymbol === symbol
-                                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                        : 'hover:bg-gray-50 text-gray-700'
+                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    : 'hover:bg-gray-50 text-gray-700'
                                     }`}
                             >
                                 <MessageSquare className="w-5 h-5" />
@@ -41,7 +47,7 @@ const Chat: React.FC = () => {
 
                 {/* Main Chat Area */}
                 <div className="flex-1 flex flex-col gap-4">
-                    <ChatWindow symbol={selectedSymbol} />
+                    <ChatWindow ref={chatWindowRef} symbol={selectedSymbol} />
 
                     {/* Quick Questions */}
                     <div className="bg-white rounded-lg shadow-sm border p-4">
@@ -51,10 +57,7 @@ const Chat: React.FC = () => {
                                 <button
                                     key={index}
                                     className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 rounded-lg transition-colors"
-                                    onClick={() => {
-                                        // This would trigger sending the question
-                                        console.log('Quick question:', question);
-                                    }}
+                                    onClick={() => handleQuickQuestion(question)}
                                 >
                                     {question}
                                 </button>
