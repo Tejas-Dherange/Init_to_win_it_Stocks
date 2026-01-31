@@ -1,4 +1,4 @@
-# RiskMind - Agentic AI Trading System
+# RiskMindAI - Agentic AI Trading System
 
 > Full-stack application that processes live/simulated Indian stock tick data, analyzes risk using autonomous agents, and makes explainable trading decisions using rule-based logic + LLM reasoning.
 
