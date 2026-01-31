@@ -43,18 +43,6 @@ async function riskNode(state: AgentState): Promise<Partial<AgentState>> {
 
     logger.info(`[LangGraph] Risk Node processing`);
     try {
-        const result = await riskAgent.execute({
-            ...state.marketData, // Spread properties to match expected input if needed, or pass object
-        } as any);
-        // Note: RiskAgent.execute expects ValidatedTick. But wait, `execute` signature in BaseAgent is generic.
-        // RiskAgent.process expects ValidatedTick. 
-        // We passed { marketData, portfolioPosition } in previous attempt.
-        // Let's check RiskAgent input type. It seems it takes ValidatedTick directly in MasterAgent?
-        // MasterAgent: riskAgent.execute(state.validatedTick!)
-
-        // CORRECTION: Re-reading MasterAgent.ts: riskAgent.execute(state.validatedTick!)
-        // So RiskAgent takes ValidatedTick.
-
         const riskResult = await riskAgent.execute(state.marketData);
 
         if (!riskResult.success || !riskResult.data) {
@@ -112,8 +100,9 @@ async function decisionNode(state: AgentState): Promise<Partial<AgentState>> {
 
 async function auditNode(state: AgentState): Promise<Partial<AgentState>> {
     logger.info(`[LangGraph] Audit Node processing`);
-    // Log the final state
+    // Log the final state scoped to user
     await auditAgent.execute({
+        userId: state.userId,
         agentName: 'RiskMindGraph',
         operation: 'WorkflowComplete',
         input: { symbol: state.portfolioPosition?.symbol || 'UNKNOWN' },

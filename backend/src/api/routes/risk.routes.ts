@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { MasterAgent } from '../../agents/master/MasterAgent';
 import { csvDataLoader } from '../../services/data-sources/CSVDataLoader';
 import { logger } from '../../utils/logger';
+import { requireAuth } from '../middleware/requireAuth.middleware';
 
 const router = Router();
 const masterAgent = new MasterAgent();
@@ -10,12 +11,21 @@ const masterAgent = new MasterAgent();
  * GET /api/v1/risk/:symbol
  * Get risk assessment for a symbol
  */
-router.get('/:symbol', async (req, res, next) => {
+router.get('/:symbol', requireAuth, async (req, res, next) => {
     try {
         const { symbol } = req.params;
-        logger.info(`Risk assessment requested for ${symbol}`);
+        const userId = req.user?.id;
 
-        // Get tick data from CSV
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User context missing',
+            });
+        }
+
+        logger.info(`Risk assessment requested for ${symbol} by user ${userId}`);
+
+        // Get tick data from CSV (as global/public data)
         const tickData = await csvDataLoader.getTickBySymbol(symbol);
 
         if (!tickData) {
@@ -25,9 +35,9 @@ router.get('/:symbol', async (req, res, next) => {
             });
         }
 
-        // Run workflow (Market + Risk agents only)
+        // Run workflow (Market + Risk agents only) - Scoped to user
         const workflowResult = await masterAgent.executeWorkflow({
-            userId: '1', // Demo user
+            userId,
             rawTick: {
                 symbol: tickData.symbol,
                 price: parseFloat(tickData.price),
@@ -45,7 +55,7 @@ router.get('/:symbol', async (req, res, next) => {
             },
         });
 
-        res.json({
+        return res.json({
             success: true,
             data: {
                 symbol,
@@ -55,7 +65,7 @@ router.get('/:symbol', async (req, res, next) => {
         });
     } catch (error) {
         logger.error('Risk assessment failed:', error);
-        next(error);
+        return next(error);
     }
 });
 

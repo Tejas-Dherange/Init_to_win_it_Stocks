@@ -3,6 +3,7 @@ import prisma from '../../config/database.config';
 import { logger } from '../../utils/logger';
 
 export interface AuditInput {
+    userId?: string; // Scoped to user
     agentName: string;
     operation: string;
     input?: any;
@@ -38,9 +39,10 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
      */
     protected async process(input: AuditInput): Promise<void> {
         try {
-            // Log to database
+            // Log to database scoped to user
             await prisma.auditLog.create({
                 data: {
+                    userId: input.userId, // Multi-user support
                     agentName: input.agentName,
                     operation: input.operation,
                     input: input.input || {},
@@ -51,10 +53,9 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
                 },
             });
 
-            logger.debug(`Audit log created for ${input.agentName}.${input.operation}`);
+            logger.debug(`Audit log created for ${input.agentName}.${input.operation} (user: ${input.userId || 'system'})`);
         } catch (error) {
-            // Non-blocking error - just log warning
-            logger.warn('Failed to create audit log (DB likely not configured):', error);
+            logger.warn('Failed to create audit log:', error);
         }
     }
 
@@ -86,11 +87,10 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
                 },
             });
 
-            logger.info(`Decision logged: ${decision.id}`);
+            logger.info(`Decision logged: ${decision.id} for user ${params.userId}`);
             return decision.id;
         } catch (error) {
-            logger.warn('Failed to log decision (DB likely not configured):', error);
-            // Return a temporary ID so flow works
+            logger.warn('Failed to log decision:', error);
             return `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         }
     }
@@ -147,9 +147,10 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
     }
 
     /**
-     * Get audit trail for a timeframe
+     * Get audit trail for a timeframe - SCOPED TO USER
      */
     async getAuditTrail(params: {
+        userId: string;
         agentName?: string;
         startTime: Date;
         endTime: Date;
@@ -158,6 +159,7 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
         try {
             const logs = await prisma.auditLog.findMany({
                 where: {
+                    userId: params.userId, // Strict user isolation
                     agentName: params.agentName,
                     timestamp: {
                         gte: params.startTime,
@@ -178,9 +180,9 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
     }
 
     /**
-     * Generate compliance report
+     * Generate compliance report - SCOPED TO USER
      */
-    async generateComplianceReport(date: Date): Promise<{
+    async generateComplianceReport(userId: string, date: Date): Promise<{
         totalDecisions: number;
         approvedDecisions: number;
         rejectedDecisions: number;
@@ -196,6 +198,7 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
 
             const decisions = await prisma.decision.findMany({
                 where: {
+                    userId, // Strict user isolation
                     createdAt: {
                         gte: startOfDay,
                         lte: endOfDay,
@@ -236,4 +239,5 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
     }
 }
 
+export const auditAgent = new AuditAgent();
 export default AuditAgent;

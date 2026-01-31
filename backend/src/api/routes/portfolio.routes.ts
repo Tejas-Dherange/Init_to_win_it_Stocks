@@ -1,58 +1,75 @@
 import { Router } from 'express';
-import { csvDataLoader } from '../../services/data-sources/CSVDataLoader';
 import { logger } from '../../utils/logger';
+import { requireAuth } from '../middleware/requireAuth.middleware';
+import prisma from '../../config/database.config';
 
 const router = Router();
 
 /**
  * GET /api/v1/portfolio
- * Get user portfolio (demo - uses CSV data)
+ * Get authenticated user's portfolio from database
  */
-router.get('/', async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
     try {
-        // For demo, use user_id = "1" from CSV
-        const userId = '1';
+        const userId = req.user?.id;
 
-        const portfolioData = await csvDataLoader.loadPortfolio(userId);
-        const stockTicks = await csvDataLoader.loadStockTicks();
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User context missing',
+            });
+        }
 
-        // Enrich portfolio with current prices
-        const enrichedPortfolio = portfolioData.map((position) => {
-            const currentTick = stockTicks.find((t) => t.symbol === position.symbol);
-
-            return {
-                symbol: position.symbol,
-                quantity: parseInt(position.quantity, 10),
-                entryPrice: parseFloat(position.entry_price),
-                currentPrice: currentTick ? parseFloat(currentTick.price) : parseFloat(position.current_price),
-                pnl: parseFloat(position.pnl),
-                pnlPercent: parseFloat(position.pnl_percent),
-                riskScore: parseFloat(position.risk_score),
-                exposure: parseFloat(position.exposure),
-                sector: position.sector,
-            };
+        // Load portfolio from database scoped to user
+        const positions = await prisma.portfolio.findMany({
+            where: { userId },
+            orderBy: { symbol: 'asc' }
         });
 
-        // Calculate totals
-        const totalPnL = enrichedPortfolio.reduce((sum, p) => sum + p.pnl, 0);
-        const totalExposure = enrichedPortfolio.reduce((sum, p) => sum + p.exposure, 0);
-        const avgRisk = enrichedPortfolio.reduce((sum, p) => sum + p.riskScore, 0) / enrichedPortfolio.length;
+        if (positions.length === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    positions: [],
+                    summary: {
+                        totalPnL: 0,
+                        totalExposure: 0,
+                        avgRiskScore: 0,
+                        positionCount: 0,
+                    },
+                },
+            });
+        }
 
-        res.json({
+        // Calculate totals based ONLY on user's data
+        const totalPnL = positions.reduce((sum, p) => sum + p.pnl, 0);
+        const totalExposure = positions.reduce((sum, p) => sum + p.exposure, 0);
+        const avgRisk = positions.reduce((sum, p) => sum + p.riskScore, 0) / positions.length;
+
+        return res.json({
             success: true,
             data: {
-                positions: enrichedPortfolio,
+                positions: positions.map(p => ({
+                    ...p,
+                    quantity: p.quantity,
+                    entryPrice: p.entryPrice,
+                    currentPrice: p.currentPrice,
+                    pnl: p.pnl,
+                    pnlPercent: p.pnlPercent,
+                    riskScore: p.riskScore,
+                    exposure: p.exposure,
+                })),
                 summary: {
                     totalPnL,
                     totalExposure,
                     avgRiskScore: avgRisk,
-                    positionCount: enrichedPortfolio.length,
+                    positionCount: positions.length,
                 },
             },
         });
     } catch (error) {
-        logger.error('Failed to fetch portfolio:', error);
-        next(error);
+        logger.error('Failed to fetch user portfolio:', error);
+        return next(error);
     }
 });
 

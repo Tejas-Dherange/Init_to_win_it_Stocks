@@ -1,23 +1,31 @@
 import { Router } from 'express';
 import { chatService } from '../../services/chat/ChatService';
 import { logger } from '../../utils/logger';
+import { requireAuth } from '../middleware/requireAuth.middleware';
 
 const router = Router();
 
 /**
  * GET /api/v1/chat/:symbol
- * Get chat history for a symbol
+ * Get chat history for a symbol for authenticated user
  */
-router.get('/:symbol', async (req, res, next) => {
+router.get('/:symbol', requireAuth, async (req, res, next) => {
     try {
         const { symbol } = req.params;
-        const userId = '1'; // Demo user
+        const userId = req.user?.id;
 
-        logger.info(`Getting chat history for ${symbol}`);
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User context missing',
+            });
+        }
+
+        logger.info(`Getting chat history for ${symbol} by user ${userId}`);
 
         const messages = await chatService.getChatHistory(userId, symbol);
 
-        res.json({
+        return res.json({
             success: true,
             data: {
                 symbol,
@@ -26,19 +34,26 @@ router.get('/:symbol', async (req, res, next) => {
         });
     } catch (error) {
         logger.error('Failed to get chat history:', error);
-        next(error);
+        return next(error);
     }
 });
 
 /**
  * POST /api/v1/chat/:symbol
- * Send message and get LLM response
+ * Send message and get LLM response for authenticated user
  */
-router.post('/:symbol', async (req, res, next) => {
+router.post('/:symbol', requireAuth, async (req, res, next) => {
     try {
         const { symbol } = req.params;
         const { message } = req.body;
-        const userId = '1'; // Demo user
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User context missing',
+            });
+        }
 
         if (!message) {
             return res.status(400).json({
@@ -47,40 +62,47 @@ router.post('/:symbol', async (req, res, next) => {
             });
         }
 
-        logger.info(`Sending message for ${symbol}: ${message.substring(0, 50)}...`);
+        logger.info(`Sending message for ${symbol} by user ${userId}: ${message.substring(0, 50)}...`);
 
         const result = await chatService.sendMessage(userId, symbol, message);
 
-        res.json({
+        return res.json({
             success: true,
             data: result,
         });
     } catch (error) {
         logger.error('Failed to send message:', error);
-        next(error);
+        return next(error);
     }
 });
 
 /**
  * DELETE /api/v1/chat/:symbol
- * Clear chat history for a symbol
+ * Clear chat history for a symbol for authenticated user
  */
-router.delete('/:symbol', async (req, res, next) => {
+router.delete('/:symbol', requireAuth, async (req, res, next) => {
     try {
         const { symbol } = req.params;
-        const userId = '1'; // Demo user
+        const userId = req.user?.id;
 
-        logger.info(`Clearing chat history for ${symbol}`);
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User context missing',
+            });
+        }
+
+        logger.info(`Clearing chat history for ${symbol} by user ${userId}`);
 
         await chatService.clearChat(userId, symbol);
 
-        res.json({
+        return res.json({
             success: true,
             message: 'Chat history cleared',
         });
     } catch (error) {
         logger.error('Failed to clear chat:', error);
-        next(error);
+        return next(error);
     }
 });
 

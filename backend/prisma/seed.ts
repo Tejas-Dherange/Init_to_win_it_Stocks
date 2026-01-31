@@ -1,75 +1,56 @@
 import { PrismaClient } from '@prisma/client';
-import { csvDataLoader } from '../src/services/data-sources/CSVDataLoader';
 
 const prisma = new PrismaClient();
 
 async function main() {
     console.log('🌱 Starting database seed...');
 
-    // 1. Create Default User
     const userId = '1';
-    const user = await prisma.user.upsert({
-        where: { email: 'demo@riskmind.ai' },
+    await prisma.user.upsert({
+        where: { email: 'tejasdivekar9057@gmail.com' },
         update: {},
         create: {
             id: userId,
-            email: 'demo@riskmind.ai',
-            name: 'Demo Trader',
-            password: 'hashed_password_here', // In production, hash this!
+            email: 'tejasdivekar9057@gmail.com',
+            clerkId: 'user_demo_tejas_9057', // Placeholder for seeding
+            name: 'Tejas Divekar',
             riskTolerance: 0.6,
         },
     });
-    console.log(`👤 Created/Found User: ${user.name}`);
 
-    // 2. Load Portfolio from CSV
-    const portfolioData = await csvDataLoader.loadPortfolio(userId);
-    console.log(`📦 Found ${portfolioData.length} portfolio items in CSV.`);
+    const portfolioData = [
+        { symbol: 'RELIANCE', quantity: 10, entryPrice: 2450.50, entryDate: new Date('2023-10-15'), currentPrice: 2600.25, pnl: 1497.50, pnlPercent: 6.11, riskScore: 0.35, exposure: 26002.50, sector: 'Energy' },
+        { symbol: 'TCS', quantity: 5, entryPrice: 3200.00, entryDate: new Date('2023-11-01'), currentPrice: 3100.10, pnl: -499.50, pnlPercent: -3.12, riskScore: 0.25, exposure: 15500.50, sector: 'IT' },
+        { symbol: 'INFY', quantity: 15, entryPrice: 1450.00, entryDate: new Date('2023-09-20'), currentPrice: 1500.20, pnl: 753.00, pnlPercent: 3.46, riskScore: 0.30, exposure: 22503.00, sector: 'IT' },
+        { symbol: 'HDFCBANK', quantity: 20, entryPrice: 1600.00, entryDate: new Date('2023-10-05'), currentPrice: 1550.40, pnl: -992.00, pnlPercent: -3.10, riskScore: 0.20, exposure: 31008.00, sector: 'Banking' },
+        { symbol: 'ICICIBANK', quantity: 25, entryPrice: 850.00, entryDate: new Date('2023-08-25'), currentPrice: 920.15, pnl: 1753.75, pnlPercent: 8.25, riskScore: 0.28, exposure: 23003.75, sector: 'Banking' },
+    ];
 
     for (const item of portfolioData) {
-        // Check if position exists
-        const existing = await prisma.portfolio.findUnique({
-            where: {
-                userId_symbol: {
-                    userId: userId,
-                    symbol: item.symbol,
-                },
+        await prisma.portfolio.upsert({
+            where: { userId_symbol: { userId, symbol: item.symbol } },
+            update: {
+                quantity: item.quantity,
+                currentPrice: item.currentPrice,
+                pnl: item.pnl,
+                pnlPercent: item.pnlPercent,
+            },
+            create: {
+                userId,
+                symbol: item.symbol,
+                quantity: item.quantity,
+                entryPrice: item.entryPrice,
+                entryDate: item.entryDate,
+                currentPrice: item.currentPrice,
+                pnl: item.pnl,
+                pnlPercent: item.pnlPercent,
+                riskScore: item.riskScore,
+                exposure: item.exposure,
+                sector: item.sector,
             },
         });
-
-        if (!existing) {
-            await prisma.portfolio.create({
-                data: {
-                    userId: userId,
-                    symbol: item.symbol,
-                    quantity: parseInt(item.quantity, 10),
-                    entryPrice: parseFloat(item.entry_price),
-                    entryDate: new Date(item.entry_date), // Ensure CSV date format matches or parse it
-                    currentPrice: parseFloat(item.current_price),
-                    pnl: parseFloat(item.pnl),
-                    pnlPercent: parseFloat(item.pnl_percent),
-                    riskScore: parseFloat(item.risk_score),
-                    exposure: parseFloat(item.exposure),
-                    sector: item.sector,
-                },
-            });
-            console.log(`   + Added position: ${item.symbol}`);
-        } else {
-            console.log(`   = Skipped existing position: ${item.symbol}`);
-        }
     }
-
-    // 3. Seed Stock Ticks (Optional, strictly for history if needed, but app reads ticks from CSV mostly)
-    // Logic: For now, we mainly rely on CSV for ticks, but we could seed them into DB if we switch to DB-based TickLoader.
-    // Skipping to keep seed fast and focused on User/Portfolio.
-
     console.log('✅ Seeding completed.');
 }
 
-main()
-    .catch((e) => {
-        console.error(e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+main().catch(console.error).finally(() => prisma.$disconnect());

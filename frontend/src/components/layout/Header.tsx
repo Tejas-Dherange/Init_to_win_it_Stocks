@@ -1,5 +1,7 @@
 import React from 'react';
 import { Bell, Search } from 'lucide-react';
+import UserMenu from './UserMenu';
+
 
 export const Header: React.FC = () => {
     return (
@@ -36,6 +38,9 @@ export const Header: React.FC = () => {
                         })}
                         <span className="text-xs ml-1">IST</span>
                     </div>
+
+                    {/* User Menu */}
+                    <UserMenu />
                 </div>
             </div>
         </header>

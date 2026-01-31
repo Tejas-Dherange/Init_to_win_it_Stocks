@@ -3,27 +3,49 @@ import { MasterAgent } from '../../agents/master/MasterAgent';
 import { csvDataLoader } from '../../services/data-sources/CSVDataLoader';
 import { logger } from '../../utils/logger';
 import prisma from '../../config/database.config';
-import { environment } from '../../config/environment';
+import { requireAuth } from '../middleware/requireAuth.middleware';
 
 const router = Router();
 const masterAgent = new MasterAgent();
 
 /**
  * POST /api/v1/decisions/generate
- * Generate trading decisions for portfolio
+ * Generate trading decisions for authenticated user's portfolio
  */
-router.post('/generate', async (req, res, next) => {
+router.post('/generate', requireAuth, async (req, res, next) => {
     try {
-        const userId = '1'; // Demo user
+        const userId = req.user?.id;
 
-        // Load portfolio
-        const portfolioData = await csvDataLoader.loadPortfolio(userId);
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User context missing',
+            });
+        }
+
+        // Load portfolio from database scoped to user
+        const userPortfolio = await prisma.portfolio.findMany({
+            where: { userId },
+        });
+
+        if (userPortfolio.length === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    decisions: [],
+                    count: 0,
+                    highUrgency: 0,
+                },
+            });
+        }
+
+        // Load global simulated stock ticks
         const stockTicks = await csvDataLoader.loadStockTicks();
 
         const decisions = [];
 
         // Process each position
-        for (const position of portfolioData) {
+        for (const position of userPortfolio) {
             const tickData = stockTicks.find((t) => t.symbol === position.symbol);
 
             if (!tickData) {
@@ -31,21 +53,7 @@ router.post('/generate', async (req, res, next) => {
                 continue;
             }
 
-            // Fetch real portfolio ID from DB for FK constraint
-            let portfolioId = position.symbol; // Fallback
-            if (environment.databaseUrl) {
-                const dbPortfolio = await prisma.portfolio.findFirst({
-                    where: {
-                        userId: userId,
-                        symbol: position.symbol,
-                    },
-                });
-                if (dbPortfolio) {
-                    portfolioId = dbPortfolio.id;
-                }
-            }
-
-            // Run complete workflow
+            // Run complete workflow scoped to user
             const workflowResult = await masterAgent.executeWorkflow({
                 userId,
                 rawTick: {
@@ -64,10 +72,10 @@ router.post('/generate', async (req, res, next) => {
                     sector: tickData.sector,
                 },
                 portfolioPosition: {
-                    id: portfolioId, // Use real UUID or symbol fallback
+                    id: position.id,
                     symbol: position.symbol,
-                    quantity: parseInt(position.quantity, 10),
-                    entryPrice: parseFloat(position.entry_price),
+                    quantity: position.quantity,
+                    entryPrice: position.entryPrice,
                     currentPrice: parseFloat(tickData.price),
                 },
             });
@@ -84,7 +92,7 @@ router.post('/generate', async (req, res, next) => {
         // Sort by urgency
         decisions.sort((a, b) => b.decision.urgency - a.decision.urgency);
 
-        res.json({
+        return res.json({
             success: true,
             data: {
                 decisions,
@@ -94,24 +102,39 @@ router.post('/generate', async (req, res, next) => {
         });
     } catch (error) {
         logger.error('Failed to generate decisions:', error);
-        next(error);
+        return next(error);
     }
 });
 
 /**
  * GET /api/v1/decisions
- * Get pending decisions (demo - returns generated decisions)
+ * Get pending decisions for the authenticated user
  */
-router.get('/', async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
     try {
-        // For demo, redirect to generate endpoint
-        res.json({
+        const userId = req.user?.id;
+
+        const pendingDecisions = await prisma.decision.findMany({
+            where: {
+                userId,
+                status: 'pending',
+            },
+            include: {
+                portfolio: true,
+                alternatives: true,
+            },
+            orderBy: {
+                urgency: 'desc',
+            },
+        });
+
+        return res.json({
             success: true,
-            message: 'Use POST /decisions/generate to create decisions',
-            data: [],
+            data: pendingDecisions,
         });
     } catch (error) {
-        next(error);
+        logger.error('Failed to fetch pending decisions:', error);
+        return next(error);
     }
 });
 
