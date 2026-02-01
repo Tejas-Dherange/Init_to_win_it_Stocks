@@ -39,12 +39,12 @@ export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ trade, chartData
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                             {trade.symbol}
-                            <span className="text-lg font-normal text-gray-400">/ USD</span>
+                            <span className="text-lg font-normal text-gray-400">/ INR</span>
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">{trade.name}</p>
                     </div>
                     <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900">${trade.currentPrice.toFixed(2)}</div>
+                        <div className="text-2xl font-bold text-gray-900">₹{trade.currentPrice.toFixed(2)}</div>
                         <div className={`text-sm font-medium ${trade.pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {trade.pl > 0 ? '+' : ''}{trade.pl}% Today
                         </div>
@@ -56,7 +56,7 @@ export const AnalyticsPanel: React.FC<AnalyticsPanelProps> = ({ trade, chartData
                         <div className="flex items-center gap-2 text-gray-500 text-xs font-medium mb-1">
                             <Target size={14} /> Entry Price
                         </div>
-                        <div className="font-semibold text-gray-900">${trade.entryPrice.toFixed(2)}</div>
+                        <div className="font-semibold text-gray-900">₹{trade.entryPrice.toFixed(2)}</div>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-2 text-gray-500 text-xs font-medium mb-1">

@@ -61,6 +61,15 @@ app.listen(PORT, () => {
     logger.info(`🚀 RiskMind backend started on port ${PORT}`);
     logger.info(`📊 Environment: ${environment.nodeEnv}`);
     logger.info(`🔗 API: http://localhost:${PORT}/api/${environment.apiVersion}`);
+
+    // Start simulated price updates (for demo when market is closed)
+    // Comment out when using live NSE data during market hours
+    if (environment.nodeEnv === 'development') {
+        const { priceSimulator } = require('./services/PriceSimulator');
+        setTimeout(() => {
+            priceSimulator.start();
+        }, 3000); // Start after 3 seconds to let NSE poller initialize first
+    }
 });
 
 // Graceful shutdown

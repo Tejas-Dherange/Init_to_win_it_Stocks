@@ -46,7 +46,7 @@ export const TradesPanel = ({
                             </div>
 
                             <div className="col-span-3 text-right">
-                                <div className="font-medium text-gray-900">${trade.currentPrice.toFixed(2)}</div>
+                                <div className="font-medium text-gray-900">₹{trade.currentPrice.toFixed(2)}</div>
                                 <div className={`text-xs flex items-center justify-end gap-0.5 ${trade.type === 'Long' ? 'text-green-600' : 'text-red-500'}`}>
                                     {trade.type === 'Long' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                                     {trade.type}

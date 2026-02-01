@@ -23,7 +23,17 @@ export const Dashboard = () => {
                 setLoading(false);
             }
         };
+
+        // Initial fetch
         fetchTrades();
+
+        // Auto-refresh every 10 seconds to sync with live NSE data
+        const intervalId = setInterval(() => {
+            fetchTrades();
+        }, 10000);
+
+        // Cleanup interval on unmount
+        return () => clearInterval(intervalId);
     }, []);
 
     useEffect(() => {

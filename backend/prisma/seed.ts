@@ -12,7 +12,6 @@ async function main() {
         create: {
             id: userId,
             email: 'tejasdivekar9057@gmail.com',
-            clerkId: 'demo_user_clerk_id', // Added dummy ID to satisfy DB constraint
             clerkId: 'user_demo_tejas_9057', // Placeholder for seeding
             name: 'Tejas Divekar',
             riskTolerance: 0.6,
@@ -51,6 +50,41 @@ async function main() {
             },
         });
     }
+
+    // Seed trading decisions with BUY/SELL/HOLD recommendations
+    const decisionsData = [
+        { symbol: 'RELIANCE', portfolioId: null, action: 'HOLD', rationale: 'Stable momentum, low volatility. Current gains are solid.', urgency: 3, riskScore: 0.35 },
+        { symbol: 'TCS', portfolioId: null, action: 'BUY', rationale: 'Oversold, strong fundamentals. Good entry point at current dip.', urgency: 6, riskScore: 0.25 },
+        { symbol: 'INFY', portfolioId: null, action: 'HOLD', rationale: 'Positive momentum, slight uptrend. Continue holding for more gains.', urgency: 4, riskScore: 0.30 },
+        { symbol: 'HDFCBANK', portfolioId: null, action: 'BUY', rationale: 'Banking sector recovery expected. Good accumulation zone.', urgency: 8, riskScore: 0.20 },
+        { symbol: 'ICICIBANK', portfolioId: null, action: 'SELL', rationale: 'Overbought zone, take profits. Strong 8% gains realized.', urgency: 7, riskScore: 0.28 },
+    ];
+
+    for (const decision of decisionsData) {
+        // Find portfolio ID for the symbol
+        const portfolio = await prisma.portfolio.findFirst({
+            where: { userId, symbol: decision.symbol },
+        });
+
+        if (!portfolio) {
+            console.warn(`Portfolio not found for symbol ${decision.symbol}, skipping decision`);
+            continue;
+        }
+
+        await prisma.decision.create({
+            data: {
+                userId,
+                portfolioId: portfolio.id,
+                symbol: decision.symbol,
+                action: decision.action,
+                rationale: decision.rationale,
+                urgency: decision.urgency,
+                riskScore: decision.riskScore,
+                createdAt: new Date(),
+            },
+        });
+    }
+
     console.log('✅ Seeding completed.');
 }
 

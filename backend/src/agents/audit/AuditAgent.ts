@@ -117,7 +117,7 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
                 }
             });
 
-            logger.info(`Decision logged: ${decision.id} for user ${params.userId}`);
+            logger.info(`Decision logged: ${decision.id} for user ${userId}`);
             return decision.id;
         } catch (error) {
             logger.warn('Failed to log decision:', error);
