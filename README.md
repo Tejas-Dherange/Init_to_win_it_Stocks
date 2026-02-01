@@ -54,7 +54,6 @@ Every stock tick triggers this autonomous workflow:
 | **Backend** | Node.js (v20), Express, TypeScript |
 | **AI / LLM** | **LangGraph**, **Google Gemini 2.5 Flash** |
 | **Database** | PostgreSQL (managed by Prisma ORM) |
-| **Queue/Cache** | BullMQ, Redis (for async processing) |
 | **DevOps** | Docker, Nginx, DigitalOcean, Vercel |
 
 ---
@@ -137,4 +136,4 @@ riskmind/
 ## 🤝 Contributing
 
 Contributions are welcome! Please fork the repo and submit a PR.
-built with ❤️ by **Tejas Dherange**
+built with ❤️ by **Team Init to Win it**
