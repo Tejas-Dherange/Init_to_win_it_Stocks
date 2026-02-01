@@ -1,106 +1,114 @@
-# RiskMindAI - Agentic AI Trading System
+# 🧠 RiskMind: AI-Driven Algorithmic Trading Assistant
 
-> Full-stack application that processes live/simulated Indian stock tick data, analyzes risk using autonomous agents, and makes explainable trading decisions using rule-based logic + LLM reasoning.
+> **A Next-Gen Trading Platform that uses Autonomous AI Agents (LangGraph) and Google Gemini 2.5 Flash to analyze market risk, execute trades, and explain decisions in plain English.**
 
-![RiskMind Architecture](https://img.shields.io/badge/Stack-Full--Stack-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black) ![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)
-
----
-
-## 🚀 Features
-
-- **Autonomous Agents**: Market, Risk, Decision, Audit , Master (LangGraph)
-- **Real-time Dashboard**: WebSocket updates with live portfolio/risk metrics
-- **Hybrid Decision Engine**: Rule-based + LLM (Groq API) + RAG fallback
-- **Full Auditability**: Complete decision trail with LangSmith tracing
-- **Guardrails**: Stop-loss, position limits, margin checks, cooldowns
-- **Production-Ready**: Docker Compose, PostgreSQL, Redis, BullMQ
+![RiskMind Banner](https://img.shields.io/badge/Status-Active-success) ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black) ![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
 ---
 
-## 📋 Prerequisites
+## 🚀 Key Features
 
-- **Node.js** 20+ and npm
-- **Docker** and Docker Compose
-- **Groq API Key** from [console.groq.com](https://console.groq.com) (required)
-- **LangSmith API Key** (optional, for tracing)
-
----
-
-## 🛠️ Quick Start
-
-### 1. Clone and Setup
-
-```bash
-cd d:\Hackron\Init_to_win_it_Stocks
-```
-
-### 2. Configure Environment
-
-```bash
-# Copy environment templates
-cp .env.example .env
-cp apps/backend/.env.example apps/backend/.env
-
-# Edit .env and add your Groq API key
-# GROQ_API_KEY=gsk_your_key_here
-```
-
-###3. Start with Docker
-
-```bash
-# Build and start all services
-docker-compose up --build
-
-# Services will be available at:
-# Frontend: http://localhost:5173
-# Backend API: http://localhost:4000
-# PostgreSQL: localhost:5432
-# Redis: localhost:6379
-```
-
-### 4. Initialize Database
-
-```bash
-# In a new terminal, run migrations
-docker exec riskmind-backend npm run prisma:migrate
-
-# Seed initial data
-docker exec riskmind-backend npm run prisma:seed
-```
-
-### 5. Open Dashboard
-
-Navigate to `http://localhost:5173` and start submitting ticks via the TickSimulator!
+*   **🤖 Multi-Agent Workflow**: A sophisticated 5-agent pipeline (Market, Risk, Decision, Validation, Audit) orchestrated by **LangGraph**.
+*   **🧠 LLM Reasoning**: Uses **Google Gemini 2.5 Flash** to analyze complex market signals and provide human-readable rationales for every trade.
+*   **⚖️ Human-in-the-Loop**: High-risk trades (Urgency > 7) are flagged for manual review, ensuring AI doesn't go rogue.
+*   **📊 Real-Time Risk Engine**: continuously calculates Value at Risk (VaR), Volatility, and Exposure using live NSE data.
+*   **🛡️ Circuit Breakers**: Automatic trading halts if loss thresholds or error rates are exceeded.
+*   **🔐 Production Ready**: Secure authentication (Clerk), robust database (PostgreSQL), and scalable infrastructure (Docker/Redis).
 
 ---
 
-## 🏗️ Architecture
+## 🏛️ System Architecture
 
+RiskMind moves beyond simple scripts by using a stateful, graph-based architecture.
+
+### 1. High-Level Flow
+```mermaid
+graph LR
+    A[NSE Data Source] -->|Real-time Ticks| B(Backend Poller)
+    B -->|Ingest| C{RiskMind Kernel}
+    C -->|Store| D[(PostgreSQL)]
+    C -->|Event| E[LangGraph Agents]
+    E -->|Reasoning| F[Gemini 2.5 LLM]
+    E -->|Decision| G[Trade Execution]
+    G -->|Update| H[Frontend Dashboard]
 ```
-┌─────────────┐      ┌──────────────┐      ┌─────────────┐
-│   React     │◄────►│  Socket.IO   │◄────►│   Redis     │
-│  Dashboard  │      │   WebSocket  │      │  Pub/Sub    │
-└─────────────┘      └──────────────┘      └─────────────┘
-                            │
-                            ▼
-                    ┌──────────────┐
-                    │   Express    │
-                    │   REST API   │
-                    └──────────────┘
-                            │
-        ┌───────────────────┼───────────────────┐
-        ▼                   ▼                   ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   BullMQ     │    │  PostgreSQL  │    │   Groq API   │
-│   Workers    │    │   +Prisma    │    │   (LLM)      │
-└──────────────┘    └──────────────┘    └──────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────┐
-│          LangGraph Agent Pipeline               │
-│  Market → Risk → Decision → Audit → Master       │
-└─────────────────────────────────────────────────┘
-```
+
+### 2. The Agentic Pipeline (LangGraph)
+Every stock tick triggers this autonomous workflow:
+
+1.  **📥 Market Agent**: Validates data, normalizes symbols (e.g., `TCS` -> `TCS.NS`), and checks for data anomalies.
+2.  **📊 Risk Agent**: Calculates **Risk Score (0-1)** based on technicals (RSI, MACD) and quantitative metrics (VaR, Volatility).
+3.  **⚖️ Decision Agent**:
+    *   **Rule Engine**: Applies hard constraints (Stop Loss @ -5%, Take Profit @ +10%).
+    *   **LLM Strategy**: Asks **Gemini** for strategy if the rule engine is indecisive or high urgency.
+4.  **🕵️‍♂️ Validation Agent**: A "Devil's Advocate" agent that critiques the proposed trade. If it finds flaws, the trade is rejected.
+5.  **📝 Audit Agent**: Logs the entire thought process and execution details to the database for compliance.
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** | React 18, Vite, TailwindCSS, Zustand, Recharts |
+| **Backend** | Node.js (v20), Express, TypeScript |
+| **AI / LLM** | **LangGraph**, **Google Gemini 2.5 Flash** |
+| **Database** | PostgreSQL (managed by Prisma ORM) |
+| **Queue/Cache** | BullMQ, Redis (for async processing) |
+| **DevOps** | Docker, Nginx, DigitalOcean, Vercel |
+
+---
+
+## 🚦 Getting Started
+
+### Prerequisites
+*   Docker & Docker Compose
+*   Node.js v20+ (for local dev)
+*   Google Gemini API Key (Get it from [Google AI Studio](https://aistudio.google.com/))
+
+### 🐳 Run with Docker (Recommended)
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/init-to-win-it-stocks.git
+    cd init-to-win-it-stocks
+    ```
+
+2.  **Configure Environment**:
+    Create a `.env` file in `backend/` and `frontend/` based on the `.example` files.
+    **Crucial**: Add your `GEMINI_API_KEY` in `backend/.env`.
+
+    > **⚠️ Note on Gemini API**: We use the free tier of Gemini 2.5 Flash. It has rate limits. If you see "429 Too Many Requests" errors, wait a minute for the quota to reset.
+
+3.  **Start Services**:
+    ```bash
+    sudo docker-compose up --build
+    ```
+
+4.  **Access the App**:
+    *   **Frontend**: `http://localhost:5173`
+    *   **Backend**: `http://localhost:5000`
+
+---
+
+## 🔐 Login Credentials
+
+The system comes pre-seeded with a demo user account. You can use these credentials to log in and test the specific "User Profile" features.
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Test User** | `tejasdivekar9057@gmail.com` | *(Handled by Clerk Auth / Any valid OTP)* |
+
+*Note: Since we use Clerk for authentication, you can also simply "Sign Up" with any valid email to create a new account.*
+
+---
+
+## 🧪 Testing the System
+
+1.  **Dashboard**: You will see a "Tick Simulator" on the dashboard (in Dev mode).
+2.  **Simulate Data**: Click buttons to send simulated price updates for `RELIANCE` or `TCS`.
+3.  **Watch Agents**: Observe the "Action Feed" panel. You will see the AI agents picking up the new price, calculating risk, and publishing decisions in real-time.
+4.  **Chat with AI**: Go to the "Chat" page and ask: *"How is my Reliance position doing?"* or *"Why did you sell TCS?"*. Use the Gemini-powered agent to get context-aware answers.
 
 ---
 
@@ -108,227 +116,25 @@ Navigate to `http://localhost:5173` and start submitting ticks via the TickSimul
 
 ```
 riskmind/
-├── apps/backend/          # Node.js + Express + TypeScript
+├── backend/                # Node.js API & Agent Logic
 │   ├── src/
-│   │   ├── agents/        # 6 LangGraph agents
-│   │   ├── services/      # Prisma, Redis, Groq, Socket.IO
-│   │   ├── controllers/   # API handlers
-│   │   ├── routes/        # REST endpoints
-│   │   ├── queue/         # BullMQ workers
-│   │   └── types/         # TypeScript definitions
-│   ├── prisma/           # Database schema + seed
+│   │   ├── agents/         # LangGraph Agent Definitions
+│   │   ├── services/       # Gemini, NSE, Database Services
+│   │   └── workers/        # Background Job Processors
+│   ├── prisma/             # Database Schema & Seed
 │   └── Dockerfile
-├── frontend/              # React + Zustand + TailwindCSS
+├── frontend/               # React Dashboard
 │   ├── src/
-│   │   ├── components/    # Dashboard, ActionFeed, RiskPanel, etc.
-│   │   ├── store/         # Zustand state management
-│   │   ├── services/      # API + WebSocket
-│   │   └── pages/         # Main dashboard page
+│   │   ├── components/     # UI Components
+│   │   ├── services/       # API Clients
+│   │   └── pages/          # Application Routes
 │   └── Dockerfile
-└── docker-compose.yml
+└── nginx/                  # Reverse Proxy Config
 ```
-
----
-
-## 🔌 API Endpoints
-
-| Method | Route                 | Description                       |
-|--------|-----------------------|-----------------------------------|
-| POST   | `/api/tick`           | Submit single tick                |
-| POST   | `/api/control/load`   | Bulk load ticks from array        |
-| GET    | `/api/portfolio`      | Get current portfolio state       |
-| GET    | `/api/actions`        | Get last 20 decisions             |
-| GET    | `/api/audit/:tickId`  | Get full audit for tick           |
-| GET    | `/api/explain/:id`    | Get LLM rationale for decision    |
-
----
-
-## 🤖 Agent Flow
-
-1. **MarketAgent**: Accepts tick → stores in DB → pushes to queue
-2. **RiskAgent**: Calculates volatility, VaR, exposure from rolling window
-3. **PortfolioAgent**: Tracks positions, PnL, cash
-4. **PolicyAgent**: Applies rules (stop-loss, take-profit, etc.) → LLM fallback if urgency ≥ 8
-5. **ExecutionAgent**: Applies decision with guardrails (max 50% adjustment, cooldown)
-6. **AuditAgent**: Stores full snapshot → publishes via Redis Pub/Sub → WebSocket
-
----
-
-## 🎯 Decision Rules
-
-| Rule              | Trigger                 | Action       | Urgency |
-|-------------------|-------------------------|--------------|---------|
-| Stop Loss         | PnL < -5%               | Exit         | 9       |
-| Take Profit       | PnL > 8%                | Reduce 50%   | 7       |
-| Overexposure      | Exposure > 35%          | Reallocate   | 8       |
-| High Volatility   | σ > 2.5× avg            | Reduce 25%   | 6       |
-| Margin Risk       | Margin > 90%            | Exit         | 10      |
-
-**LLM Fallback**: When urgency ≥ 8, PolicyAgent consults Groq API (Mixtral-8x7b) for complex scenarios.
-
----
-
-## 🧪 Testing
-
-### Manual Test via Dashboard
-
-1. Open `http://localhost:5173`
-2. Use **TickSimulator** component
-3. Submit test ticks for RELIANCE, TCS, etc.
-4. Observe real-time updates in:
-   - **ActionFeed** (decisions)
-   - **PortfolioView** (positions/PnL)
-   - **RiskPanel** (volatility/VaR)
-
-### API Test with curl
-
-```bash
-# Submit a tick
-curl -X POST http://localhost:4000/api/tick \
-  -H "Content-Type: application/json" \
-  -d '{"symbol":"RELIANCE","price":2450.50,"volume":1000000}'
-
-# Get portfolio
-curl http://localhost:4000/api/portfolio
-
-# Get recent decisions
-curl http://localhost:4000/api/actions
-```
-
----
-
-## 🔧 Development
-
-### Run Backend Locally (without Docker)
-
-```bash
-cd apps/backend
-
-# Install dependencies
-npm install
-
-# Setup database (requires PostgreSQL running)
-npx prisma migrate dev
-npx prisma generate
-npm run prisma:seed
-
-# Start dev server
-npm run dev
-```
-
-### Run Frontend Locally
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-```
-
----
-
-## 📊 Environment Variables
-
-### Root `.env` (for Docker Compose)
-
-```bash
-GROQ_API_KEY=gsk_your_groq_key
-LANGCHAIN_TRACING_V2=false
-LANGCHAIN_API_KEY=
-```
-
-### Backend `.env` (for local development)
-
-```bash
-NODE_ENV=development
-PORT=4000
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/riskmind"
-REDIS_HOST=localhost
-REDIS_PORT=6379
-GROQ_API_KEY=gsk_your_groq_key
-LANGCHAIN_TRACING_V2=false
-CORS_ORIGIN=http://localhost:5173
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Port Conflicts
-
-If ports 4000, 5173, 5432, or 6379 are in use:
-```bash
-# Stop conflicting services or edit docker-compose.yml
-```
-
-### Database Connection Issues
-
-```bash
-# Restart postgres container
-docker-compose restart postgres
-
-# Check logs
-docker logs riskmind-postgres
-```
-
-### WebSocket Not Connecting
-
-- Ensure backend is running on port 4000
-- Check CORS settings in backend `.env`
-- Verify `VITE_WS_URL` in frontend
-
----
-
-## 📝 Tech Stack
-
-**Backend**:
-- Node.js 20 + Express + TypeScript
-- Prisma ORM + PostgreSQL
-- Redis + BullMQ
-- Socket.IO
-- LangChain + Groq API
-
-**Frontend**:
-- React 19 + TypeScript
-- Zustand (state management)
-- TailwindCSS
-- Socket.IO Client
-- Recharts
-- Axios
-
-**DevOps**:
-- Docker + Docker Compose
-- Multi-stage builds
-
----
-
-## 📜 License
-
-MIT
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
----
-
-## 👨‍💻 Author
-
-Built with ❤️ using LangGraph + Groq AI
-
----
-
-## 🙏 Acknowledgments
-
-- [LangChain](https://langchain.com) for agent framework
-- [Groq](https://groq.com) for lightning-fast LLM inference
-- [Prisma](https://prisma.io) for type-safe database access
+Contributions are welcome! Please fork the repo and submit a PR.
+built with ❤️ by **Tejas Dherange**

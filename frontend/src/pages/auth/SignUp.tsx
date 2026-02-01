@@ -36,6 +36,18 @@ export default function SignUpPage() {
                     redirectUrl="/"
                 />
             </div>
+            <div>
+                <h1 className="text-white text-center mt-4">
+                    <span className="font-bold">
+
+                        Login Credentials
+                    </span>
+                    <br />
+                    Email: tejasdivekar9057@gmail.com
+                    <br />
+                    Password: Shubhangi@9057
+                </h1>
+            </div>
         </div>
     );
 }

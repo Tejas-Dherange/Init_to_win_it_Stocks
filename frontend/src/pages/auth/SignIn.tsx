@@ -3,7 +3,7 @@ import { SignIn as ClerkSignIn } from '@clerk/clerk-react';
 export default function SignInPage() {
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 px-4">
+        <div className="min-h-screen flex  items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 px-4">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2">RiskMind</h1>
@@ -36,6 +36,20 @@ export default function SignInPage() {
                     afterSignInUrl="/"
                     redirectUrl="/"
                 />
+
+
+            </div>
+            <div>
+                <h1 className="text-white text-center mt-4">
+                    <span className="font-bold">
+
+                        Login Credentials
+                    </span>
+                    <br />
+                    Email: tejasdivekar9057@gmail.com
+                    <br />
+                    Password: Shubhangi@9057
+                </h1>
             </div>
         </div>
     );
