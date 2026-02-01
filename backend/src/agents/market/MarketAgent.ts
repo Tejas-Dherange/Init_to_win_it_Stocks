@@ -1,11 +1,9 @@
 import { BaseAgent } from '../base/BaseAgent';
 import { TickData, ValidatedTick } from '../../types/agents.types';
-import { tickSchema, validatePriceRelationships, validateNSESymbol } from './validators';
+import { validatePriceRelationships, validateNSESymbol } from './validators';
 import {
     normalizeStockSymbol,
-    normalizeTimestamp,
-    calculateChange,
-    calculateChangePercent
+    normalizeTimestamp
 } from './normalizers';
 import { logger } from '../../utils/logger';
 import { csvDataLoader } from '../../services/data-sources/CSVDataLoader';

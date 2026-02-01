@@ -1,21 +1,17 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+
+interface RiskData {
+    timestamp: string;
+    score: number;
+}
 
 interface RiskChartProps {
-    data: Array<{
-        timestamp: string;
-        riskScore: number;
-    }>;
+    data: RiskData[];
     symbol: string;
 }
 
-const RiskChart: React.FC<RiskChartProps> = ({ data, symbol }) => {
-    const getRiskColor = (score: number) => {
-        if (score < 0.4) return '#10b981'; // green
-        if (score < 0.7) return '#f59e0b'; // yellow
-        return '#ef4444'; // red
-    };
-
+const RiskChart = ({ data, symbol }: RiskChartProps) => {
     return (
         <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -51,7 +47,7 @@ const RiskChart: React.FC<RiskChartProps> = ({ data, symbol }) => {
                     />
                     <Area
                         type="monotone"
-                        dataKey="riskScore"
+                        dataKey="score"
                         stroke="#3b82f6"
                         strokeWidth={2}
                         fill="url(#riskGradient)"

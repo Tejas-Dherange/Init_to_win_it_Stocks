@@ -17,7 +17,7 @@ export class OpportunityFinder {
         excludeSymbols?: string[];
         limit?: number;
     }): Promise<AlternativeStock[]> {
-        const { currentSymbol, currentSector, excludeSymbols = [], limit = 5 } = params;
+        const { currentSymbol, excludeSymbols = [], limit = 5 } = params;
 
         try {
             logger.info(`Finding alternatives for ${currentSymbol}`);

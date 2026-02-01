@@ -64,7 +64,7 @@ export class AuditAgent extends BaseAgent<AuditInput, void> {
      */
     async logDecision({
         userId,
-        portfolioId,
+        // portfolioId, // Removed unused variable
         symbol,
         action,
         rationale,

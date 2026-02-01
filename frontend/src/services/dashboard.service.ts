@@ -9,7 +9,8 @@ export const dashboardService = {
             const response = await apiService.get('/portfolio');
 
             // Transform portfolio data to match dashboard expectations
-            const positions = response.data?.positions || [];
+            const data = response.data as any;
+            const positions = data?.positions || [];
 
             return {
                 current: positions.map((pos: any) => ({
@@ -28,7 +29,7 @@ export const dashboardService = {
                     lastUpdate: pos.lastUpdate,
                 })),
                 suggested: [], // Suggestions would come from decisions endpoint
-                summary: response.data?.summary || {},
+                summary: (response.data as any)?.summary || {},
             };
         } catch (error) {
             console.error('[DashboardService] Failed to fetch trades:', error);

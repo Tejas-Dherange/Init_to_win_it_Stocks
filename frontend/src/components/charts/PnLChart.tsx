@@ -10,7 +10,7 @@ interface PnLChartProps {
 }
 
 const PnLChart: React.FC<PnLChartProps> = ({ data, symbol }) => {
-    const maxPnL = Math.max(...data.map((d) => Math.abs(d.pnl)));
+
     const isProfit = data[data.length - 1]?.pnl >= 0;
 
     return (

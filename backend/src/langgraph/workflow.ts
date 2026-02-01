@@ -78,7 +78,7 @@ async function riskInterpretationNode(state: AgentState): Promise<Partial<AgentS
             riskScore: state.riskAssessment.riskScore,
             riskLevel: state.riskAssessment.riskLevel,
             volatility: state.riskAssessment.factors.volatility,
-            var95: state.riskAssessment.var95,
+            var95: state.riskAssessment.factors.var95,
             currentPrice: state.marketData.price,
         }, true); // detailed interpretation
 
@@ -108,9 +108,11 @@ async function decisionNode(state: AgentState): Promise<Partial<AgentState>> {
                 quantity: 0,
                 entryPrice: state.marketData.price,
                 currentPrice: state.marketData.price,
+                pnl: 0,
+                pnlPercent: 0,
+                exposure: 0,
                 unrealizedPnL: 0,
                 realizedPnL: 0,
-                exposure: 0,
                 marginUsed: 0,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -264,12 +266,12 @@ workflow.addEdge("market_agent", "risk_agent");
 // Conditional routing after risk assessment
 // @ts-ignore
 workflow.addConditionalEdges(
-    "risk_agent",
+    "risk_agent" as any,
     shouldUseDetailedRiskAnalysis,
     {
         risk_interpretation: "risk_interpretation",
         decision_agent: "decision_agent"
-    }
+    } as any
 );
 
 // If we go through risk interpretation, then proceed to decision

@@ -115,7 +115,7 @@ router.post('/generate', requireAuth, async (req, res, next) => {
  * Get pending decisions for the authenticated user
  * AUTH TEMPORARILY DISABLED FOR TESTING
  */
-router.get('/', /* requireAuth, */ async (req, res, next) => {
+router.get('/', /* requireAuth, */ async (_req, res, next) => {
     try {
         const userId = '1'; // req.user?.id;
 

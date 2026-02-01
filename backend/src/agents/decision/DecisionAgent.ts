@@ -1,5 +1,5 @@
 import { BaseAgent } from '../base/BaseAgent';
-import { DecisionInput, DecisionOutput, PortfolioPosition } from '../../types/agents.types';
+import { DecisionInput, DecisionOutput } from '../../types/agents.types';
 import { RuleBasedStrategy } from './RuleBasedStrategy';
 import { LLMStrategy } from './LLMStrategy';
 import { OpportunityFinder } from './OpportunityFinder';

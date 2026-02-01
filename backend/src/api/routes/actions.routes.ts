@@ -9,9 +9,9 @@ const router = Router();
  * GET /api/v1/actions/pending
  * Get pending actions for user
  */
-router.get('/pending', requireAuth, async (req, res, next) => {
+router.get('/pending', requireAuth, async (_req, res, _next) => {
     try {
-        const userId = req.user?.id;
+        // const userId = req.user?.id; // Unused for now, but keeping for reference
 
         // Query without alternatives field if it doesn't exist
         const pendingDecisions = await prisma.decision.findMany({
@@ -33,10 +33,11 @@ router.get('/pending', requireAuth, async (req, res, next) => {
     } catch (error) {
         logger.error('Failed to get pending actions:', error);
         // Return empty array instead of failing
-        res.json({
+        return res.json({
             success: true,
             data: [],
         });
+        // next(error); // Optional: call next if you want global error handler to also run, but returning response handles it.
     }
 });
 

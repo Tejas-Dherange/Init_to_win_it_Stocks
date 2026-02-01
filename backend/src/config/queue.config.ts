@@ -1,6 +1,6 @@
-import { Queue, Worker, QueueOptions } from 'bullmq';
+import { Queue, QueueOptions } from 'bullmq';
 import { redisClient } from './redis.config';
-import { environment } from './environment';
+// import { environment } from './environment';
 
 const queueOptions: QueueOptions = {
     connection: redisClient,

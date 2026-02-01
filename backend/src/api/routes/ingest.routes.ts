@@ -3,10 +3,10 @@ import { z } from 'zod';
 import { logger } from '../../utils/logger';
 import { nseProvider } from '../../services/data-sources/stock/NSEProvider';
 import prisma from '../../config/database.config';
-import { MasterAgent } from '../../agents/master/MasterAgent';
+// import { MasterAgent } from '../../agents/master/MasterAgent';
 
 const router = Router();
-const masterAgent = new MasterAgent();
+// const masterAgent = new MasterAgent(); // Unused
 
 // Validation schema for tick data
 const TickSchema = z.object({
@@ -82,25 +82,24 @@ router.post('/tick', async (req: Request, res: Response, next: NextFunction) => 
         }
         */
 
+        // Return success response with ingested tick
         res.json({
             success: true,
-            message: 'Tick ingested successfully',
             data: {
-                tickId: tick.id,
-                symbol: tick.symbol,
-                price: tick.price,
-                timestamp: tick.timestamp,
-            },
+                tick
+            }
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: 'Invalid tick data',
                 errors: error.errors,
             });
+            return;
         }
         next(error);
+        return;
     }
 });
 
@@ -154,13 +153,15 @@ router.post('/batch', async (req: Request, res: Response, next: NextFunction) =>
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: 'Invalid batch data',
                 errors: error.errors,
             });
+            return;
         }
         next(error);
+        return;
     }
 });
 
@@ -168,7 +169,8 @@ router.post('/batch', async (req: Request, res: Response, next: NextFunction) =>
  * GET /api/v1/ingest/status
  * Get poller status and NSE API health
  */
-router.get('/status', async (req: Request, res: Response) => {
+// Status endpoint
+router.get('/status', async (_req: Request, res: Response) => {
     try {
         const nseHealthy = await nseProvider.healthCheck();
 
@@ -216,7 +218,7 @@ router.get('/status', async (req: Request, res: Response) => {
  * GET /api/v1/ingest/sources
  * List available data sources
  */
-router.get('/sources', (req: Request, res: Response) => {
+router.get('/sources', (_req: Request, res: Response) => {
     res.json({
         success: true,
         data: {

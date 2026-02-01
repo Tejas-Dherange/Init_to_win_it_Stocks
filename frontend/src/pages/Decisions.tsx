@@ -5,21 +5,9 @@ import ConfirmationDialog from '../components/decisions/ConfirmationDialog';
 import { useDecisionActions } from '../hooks/useDecisionActions';
 import { useDecisionStore } from '../store/decisionStore';
 import { Button } from '../components/common/Button';
-import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
-interface Decision {
-    id: string;
-    symbol: string;
-    action: string;
-    rationale: string;
-    urgency: number;
-    riskScore: number;
-    status: string;
-    createdAt: string;
-    expectedPnl?: number;
-}
+import type { Decision } from '../types';
 
 const Decisions: React.FC = () => {
     const [decisions, setDecisions] = useState<Decision[]>([]);

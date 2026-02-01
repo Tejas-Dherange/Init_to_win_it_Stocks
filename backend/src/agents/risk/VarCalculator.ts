@@ -1,4 +1,4 @@
-import { percentile, standardDeviation } from '../../utils/helpers/mathHelpers';
+import { standardDeviation } from '../../utils/helpers/mathHelpers';
 import { logger } from '../../utils/logger';
 
 /**

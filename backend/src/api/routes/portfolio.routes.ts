@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import prisma from '../../config/database.config';
 import { logger } from '../../utils/logger';
-import { requireAuth } from '../middleware/requireAuth.middleware';
+// import { requireAuth } from '../middleware/requireAuth.middleware';
 
 const router = Router();
 
@@ -10,7 +10,7 @@ const router = Router();
  * Get authenticated user's portfolio from database with live tick data
  * AUTH TEMPORARILY DISABLED FOR TESTING - ADD BACK LATER
  */
-router.get('/', /* requireAuth, */ async (req, res, next) => {
+router.get('/', /* requireAuth, */ async (_req, res, next) => {
     try {
         // TEMP: Hardcode user ID for testing without auth
         const userId = '1'; // req.user?.id;

@@ -88,6 +88,11 @@ export interface PortfolioPosition {
     pnl: number;
     pnlPercent: number;
     exposure: number;
+    unrealizedPnL?: number;
+    realizedPnL?: number;
+    marginUsed?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export interface DecisionOutput {

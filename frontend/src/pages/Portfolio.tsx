@@ -3,18 +3,7 @@ import { TrendingUp, TrendingDown, Search, Download } from 'lucide-react';
 import { portfolioService } from '../services/portfolio.service';
 import RiskBadge from '../components/common/RiskBadge';
 
-interface Position {
-    id: string;
-    symbol: string;
-    quantity: number;
-    entryPrice: number;
-    currentPrice: number;
-    pnl: number;
-    pnlPercent: number;
-    exposure: number;
-    riskLevel: number;
-    sector?: string;
-}
+import type { Position } from '../types';
 
 const Portfolio: React.FC = () => {
     const [positions, setPositions] = useState<Position[]>([]);
@@ -42,7 +31,7 @@ const Portfolio: React.FC = () => {
     const totalValue = positions.reduce((sum, p) => sum + p.exposure, 0);
     const totalPnL = positions.reduce((sum, p) => sum + p.pnl, 0);
     const avgRisk = positions.length > 0
-        ? positions.reduce((sum, p) => sum + p.riskLevel, 0) / positions.length
+        ? positions.reduce((sum, p) => sum + p.riskScore, 0) / positions.length
         : 0;
 
     // Filter positions
@@ -51,9 +40,9 @@ const Portfolio: React.FC = () => {
         const matchesSector = filterSector === 'all' || p.sector === filterSector;
         const matchesRisk =
             filterRisk === 'all' ||
-            (filterRisk === 'low' && p.riskLevel < 0.4) ||
-            (filterRisk === 'medium' && p.riskLevel >= 0.4 && p.riskLevel < 0.7) ||
-            (filterRisk === 'high' && p.riskLevel >= 0.7);
+            (filterRisk === 'low' && p.riskScore < 0.4) ||
+            (filterRisk === 'medium' && p.riskScore >= 0.4 && p.riskScore < 0.7) ||
+            (filterRisk === 'high' && p.riskScore >= 0.7);
         return matchesSearch && matchesSector && matchesRisk;
     });
 
@@ -206,7 +195,7 @@ const Portfolio: React.FC = () => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <RiskBadge level={getRiskLevel(position.riskLevel)} score={position.riskLevel} />
+                                        <RiskBadge level={getRiskLevel(position.riskScore)} score={position.riskScore} />
                                     </td>
                                 </tr>
                             ))}

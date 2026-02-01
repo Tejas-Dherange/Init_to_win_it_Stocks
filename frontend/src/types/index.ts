@@ -1,5 +1,6 @@
 // Portfolio types
 export interface Position {
+    id: string;
     symbol: string;
     quantity: number;
     entryPrice: number;
@@ -35,7 +36,10 @@ export interface RiskAssessment {
 
 // Decision types
 export interface Decision {
+    id: string;
     symbol: string;
+    status: 'pending' | 'approved' | 'rejected' | 'executed';
+    createdAt: string;
     action: 'HOLD' | 'REDUCE' | 'EXIT' | 'STOP_LOSS' | 'REALLOCATE' | 'BUY';
     rationale: string;
     urgency: number;

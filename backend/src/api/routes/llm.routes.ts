@@ -8,7 +8,7 @@ const router = Router();
  * GET /api/v1/llm/test
  * Test LLM integration with Groq
  */
-router.get('/test', async (req, res, next) => {
+router.get('/test', async (_req, res, next) => {
     try {
         logger.info('Testing Groq LLM integration');
 
@@ -36,7 +36,7 @@ router.get('/test', async (req, res, next) => {
  * GET /api/v1/llm/health
  * Check LLM service health
  */
-router.get('/health', async (req, res, next) => {
+router.get('/health', async (_req, res, next) => {
     try {
         const isHealthy = await groqService.healthCheck();
 

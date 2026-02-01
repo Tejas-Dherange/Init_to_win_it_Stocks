@@ -1,7 +1,5 @@
 import { BaseAgent } from '../base/BaseAgent';
 import { ValidatedTick, RiskAssessment, RiskFactors } from '../../types/agents.types';
-import { VarCalculator } from './VarCalculator';
-import { VolatilityCalculator } from './VolatilityCalculator';
 import { RiskScorer } from './RiskScorer';
 import { logger } from '../../utils/logger';
 
@@ -9,14 +7,10 @@ import { logger } from '../../utils/logger';
  * RiskAgent - Calculates risk assessment for stock positions
  */
 export class RiskAgent extends BaseAgent<ValidatedTick, RiskAssessment> {
-    private varCalculator: VarCalculator;
-    private volatilityCalculator: VolatilityCalculator;
     private riskScorer: RiskScorer;
 
     constructor() {
         super('RiskAgent');
-        this.varCalculator = new VarCalculator();
-        this.volatilityCalculator = new VolatilityCalculator();
         this.riskScorer = new RiskScorer();
     }
 
