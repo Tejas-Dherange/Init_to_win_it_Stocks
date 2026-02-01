@@ -13,6 +13,17 @@ import './workers/LiveNSEPoller';
 
 const app: Application = express();
 
+// Global error handlers for startup crashes
+process.on('uncaughtException', (error) => {
+    logger.error('UNCAUGHT EXCEPTION:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    logger.error('UNHANDLED REJECTION:', reason);
+    process.exit(1);
+});
+
 // Middleware
 app.use(cors({
     origin: environment.corsOrigin,
