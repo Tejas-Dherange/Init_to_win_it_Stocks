@@ -11,19 +11,22 @@ datasource db {
 
 // User Model
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  clerkId       String   @unique // Added to match DB constraint
-  password      String
+  id            String    @id @default(uuid())
+  clerkId       String    @unique // Clerk user ID
+  email         String    @unique
+  clerkId       String    @unique // Added to match DB constraint
+  password      String?   // Optional - Clerk handles authentication
   name          String
-  riskTolerance Float    @default(0.5) // 0-1 scale
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  portfolios   Portfolio[]
-  decisions    Decision[]
-  chatMessages ChatMessage[]
-
+  riskTolerance Float     @default(0.5) // 0-1 scale
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  portfolios    Portfolio[]
+  decisions     Decision[]
+  chatMessages  ChatMessage[]
+  auditLogs     AuditLog[]
+  
+  @@index([clerkId])
   @@map("users")
 }
 
@@ -148,17 +151,21 @@ model ChatMessage {
 
 // Audit Logs for Agent Actions
 model AuditLog {
-  id            String  @id @default(uuid())
-  agentName     String  @map("agent_name")
+  id            String    @id @default(uuid())
+  userId        String?   @map("user_id") // Optional - some logs might be system-wide
+  agentName     String    @map("agent_name")
   operation     String
   input         Json?
   output        Json?
   executionTime Int     @map("execution_time") // milliseconds
   success       Boolean
-  error         String? @db.Text
-
-  timestamp DateTime @default(now())
-
+  error         String?   @db.Text
+  
+  user          User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  timestamp     DateTime  @default(now())
+  
+  @@index([userId])
   @@index([agentName])
   @@index([timestamp])
   @@map("audit_logs")

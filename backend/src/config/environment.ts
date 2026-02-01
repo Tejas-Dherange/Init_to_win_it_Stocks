@@ -15,9 +15,10 @@ export const environment = {
     redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
     redisPassword: process.env.REDIS_PASSWORD || '',
 
-    // JWT
-    jwtSecret: process.env.JWT_SECRET || 'change-this-secret',
-    jwtExpiry: process.env.JWT_EXPIRY || '7d',
+
+    // Clerk
+    clerkSecretKey: process.env.CLERK_SECRET_KEY || '',
+    clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '',
 
     // Groq API
     groqApiKey: process.env.GROQ_API_KEY || '',

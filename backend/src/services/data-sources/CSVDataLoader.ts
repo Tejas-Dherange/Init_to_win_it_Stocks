@@ -22,19 +22,6 @@ export interface StockTickCSV {
     sector: string;
 }
 
-export interface PortfolioCSV {
-    user_id: string;
-    symbol: string;
-    quantity: string;
-    entry_price: string;
-    entry_date: string;
-    current_price: string;
-    pnl: string;
-    pnl_percent: string;
-    risk_score: string;
-    exposure: string;
-    sector: string;
-}
 
 export interface NewsSentimentCSV {
     symbol: string;
@@ -74,32 +61,6 @@ export class CSVDataLoader {
         }
     }
 
-    /**
-     * Load portfolio data from CSV
-     */
-    async loadPortfolio(userId?: string): Promise<PortfolioCSV[]> {
-        try {
-            const filePath = path.join(this.dataPath, 'portfolio.csv');
-            const fileContent = fs.readFileSync(filePath, 'utf-8');
-
-            let records = parse(fileContent, {
-                columns: true,
-                skip_empty_lines: true,
-                trim: true,
-            }) as PortfolioCSV[];
-
-            // Filter by userId if provided
-            if (userId) {
-                records = records.filter(r => r.user_id === userId);
-            }
-
-            logger.info(`Loaded ${records.length} portfolio positions from CSV`);
-            return records;
-        } catch (error) {
-            logger.error('Error loading portfolio CSV:', error);
-            throw new Error('Failed to load portfolio data');
-        }
-    }
 
     /**
      * Load news sentiment data from CSV

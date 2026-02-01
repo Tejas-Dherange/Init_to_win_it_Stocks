@@ -185,8 +185,9 @@ async function decisionValidationNode(state: AgentState): Promise<Partial<AgentS
 
 async function auditNode(state: AgentState): Promise<Partial<AgentState>> {
     logger.info(`[LangGraph] Audit Node processing`);
-    // Log the final state
+    // Log the final state scoped to user
     await auditAgent.execute({
+        userId: state.userId,
         agentName: 'RiskMindGraph',
         operation: 'WorkflowComplete',
         input: { symbol: state.portfolioPosition?.symbol || state.marketData?.symbol || 'UNKNOWN' },
