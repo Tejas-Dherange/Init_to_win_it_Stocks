@@ -8,6 +8,9 @@ import { logger } from './utils/logger';
 import apiRoutes from './api/routes';
 import { errorHandler } from './api/middleware/errorHandler.middleware';
 
+// Import LiveNSEPoller to enable auto-start when DATA_SOURCE=nse
+import './workers/LiveNSEPoller';
+
 const app: Application = express();
 
 // Middleware

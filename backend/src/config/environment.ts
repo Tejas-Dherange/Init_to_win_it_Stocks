@@ -52,6 +52,13 @@ export const environment = {
     // CSV Data
     csvDataPath: process.env.CSV_DATA_PATH || './data',
 
+    // NSE Live Data Configuration
+    dataSource: process.env.DATA_SOURCE || 'csv',
+    nsePollIntervalMs: parseInt(process.env.NSE_POLL_INTERVAL_MS || '10000', 10),
+    nseWatchSymbols: (process.env.NSE_WATCH_SYMBOLS || 'TCS,INFY,RELIANCE').split(',').map(s => s.trim()).filter(Boolean),
+    nseTimeoutMs: parseInt(process.env.NSE_TIMEOUT_MS || '5000', 10),
+    nseMaxRetries: parseInt(process.env.NSE_MAX_RETRIES || '3', 10),
+
     // Logging
     logLevel: process.env.LOG_LEVEL || 'info',
     logFilePath: process.env.LOG_FILE_PATH || './logs',

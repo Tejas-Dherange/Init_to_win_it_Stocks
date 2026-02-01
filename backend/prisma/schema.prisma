@@ -11,25 +11,25 @@ datasource db {
 
 // User Model
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  clerkId       String    @unique // Added to match DB constraint
+  id            String   @id @default(uuid())
+  email         String   @unique
+  clerkId       String   @unique // Added to match DB constraint
   password      String
   name          String
-  riskTolerance Float     @default(0.5) // 0-1 scale
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  portfolios    Portfolio[]
-  decisions     Decision[]
-  chatMessages  ChatMessage[]
-  
+  riskTolerance Float    @default(0.5) // 0-1 scale
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  portfolios   Portfolio[]
+  decisions    Decision[]
+  chatMessages ChatMessage[]
+
   @@map("users")
 }
 
 // Stock Tick Data
 model Tick {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   symbol        String
   price         Float
   open          Float
@@ -38,16 +38,16 @@ model Tick {
   close         Float
   volume        BigInt
   change        Float
-  changePercent Float     @map("change_percent")
+  changePercent Float    @map("change_percent")
   timestamp     DateTime
-  sentiment     Float?    // -1 to +1
-  volatility30d Float?    @map("volatility_30d")
-  marketCap     BigInt?   @map("market_cap")
-  peRatio       Float?    @map("pe_ratio")
+  sentiment     Float? // -1 to +1
+  volatility30d Float?   @map("volatility_30d")
+  marketCap     BigInt?  @map("market_cap")
+  peRatio       Float?   @map("pe_ratio")
   sector        String?
-  
-  createdAt     DateTime  @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@index([symbol, timestamp])
   @@index([timestamp])
   @@map("ticks")
@@ -55,53 +55,53 @@ model Tick {
 
 // User Portfolio Positions
 model Portfolio {
-  id            String    @id @default(uuid())
-  userId        String    @map("user_id")
-  symbol        String
-  quantity      Int
-  entryPrice    Float     @map("entry_price")
-  entryDate     DateTime  @map("entry_date")
-  currentPrice  Float     @map("current_price")
-  pnl           Float
-  pnlPercent    Float     @map("pnl_percent")
-  riskScore     Float     @map("risk_score") // 0-1
-  exposure      Float     // position value
-  sector        String?
-  
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  decisions     Decision[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  symbol       String
+  quantity     Int
+  entryPrice   Float    @map("entry_price")
+  entryDate    DateTime @map("entry_date")
+  currentPrice Float    @map("current_price")
+  pnl          Float
+  pnlPercent   Float    @map("pnl_percent")
+  riskScore    Float    @map("risk_score") // 0-1
+  exposure     Float // position value
+  sector       String?
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  decisions Decision[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, symbol])
   @@index([userId])
   @@index([symbol])
-  @@unique([userId, symbol])
   @@map("portfolios")
 }
 
 // AI Generated Decisions
 model Decision {
-  id            String    @id @default(uuid())
-  userId        String    @map("user_id")
-  portfolioId   String    @map("portfolio_id")
-  symbol        String
-  action        String    // HOLD, REDUCE, EXIT, STOP_LOSS, REALLOCATE
-  rationale     String    @db.Text
-  urgency       Int       // 1-10
-  status        String    @default("pending") // pending, approved, rejected, executed
-  llmTraceId    String?   @map("llm_trace_id")
-  riskScore     Float     @map("risk_score")
-  expectedPnl   Float?    @map("expected_pnl")
-  
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  portfolio     Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-  alternatives  Alternative[]
-  
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  executedAt    DateTime?  @map("executed_at")
-  
+  id          String  @id @default(uuid())
+  userId      String  @map("user_id")
+  portfolioId String  @map("portfolio_id")
+  symbol      String
+  action      String // HOLD, REDUCE, EXIT, STOP_LOSS, REALLOCATE
+  rationale   String  @db.Text
+  urgency     Int // 1-10
+  status      String  @default("pending") // pending, approved, rejected, executed
+  llmTraceId  String? @map("llm_trace_id")
+  riskScore   Float   @map("risk_score")
+  expectedPnl Float?  @map("expected_pnl")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio    Portfolio     @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  alternatives Alternative[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  executedAt DateTime? @map("executed_at")
+
   @@index([userId, status])
   @@index([symbol])
   @@index([createdAt])
@@ -110,37 +110,37 @@ model Decision {
 
 // Alternative Stock Suggestions
 model Alternative {
-  id            String    @id @default(uuid())
-  decisionId    String    @map("decision_id")
-  symbol        String
-  reason        String    @db.Text
-  riskScore     Float     @map("risk_score")
-  sentiment     Float
-  score         Float     // composite score
-  sector        String?
-  currentPrice  Float?    @map("current_price")
-  
-  decision      Decision  @relation(fields: [decisionId], references: [id], onDelete: Cascade)
-  
-  createdAt     DateTime  @default(now())
-  
+  id           String  @id @default(uuid())
+  decisionId   String  @map("decision_id")
+  symbol       String
+  reason       String  @db.Text
+  riskScore    Float   @map("risk_score")
+  sentiment    Float
+  score        Float // composite score
+  sector       String?
+  currentPrice Float?  @map("current_price")
+
+  decision Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@index([decisionId])
   @@map("alternatives")
 }
 
 // Chat Messages
 model ChatMessage {
-  id            String    @id @default(uuid())
-  userId        String    @map("user_id")
-  symbol        String?
-  message       String    @db.Text
-  sender        String    // user, bot
-  llmTraceId    String?   @map("llm_trace_id")
-  
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  timestamp     DateTime  @default(now())
-  
+  id         String  @id @default(uuid())
+  userId     String  @map("user_id")
+  symbol     String?
+  message    String  @db.Text
+  sender     String // user, bot
+  llmTraceId String? @map("llm_trace_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  timestamp DateTime @default(now())
+
   @@index([userId, symbol])
   @@index([timestamp])
   @@map("chat_messages")
@@ -148,17 +148,17 @@ model ChatMessage {
 
 // Audit Logs for Agent Actions
 model AuditLog {
-  id            String    @id @default(uuid())
-  agentName     String    @map("agent_name")
+  id            String  @id @default(uuid())
+  agentName     String  @map("agent_name")
   operation     String
   input         Json?
   output        Json?
-  executionTime Int       @map("execution_time") // milliseconds
+  executionTime Int     @map("execution_time") // milliseconds
   success       Boolean
-  error         String?   @db.Text
-  
-  timestamp     DateTime  @default(now())
-  
+  error         String? @db.Text
+
+  timestamp DateTime @default(now())
+
   @@index([agentName])
   @@index([timestamp])
   @@map("audit_logs")
@@ -166,15 +166,15 @@ model AuditLog {
 
 // News Sentiment Data
 model NewsSentiment {
-  id              String    @id @default(uuid())
-  symbol          String
-  headline        String    @db.Text
-  sentimentScore  Float     @map("sentiment_score") // -1 to +1
-  source          String
-  publishedAt     DateTime  @map("published_at")
-  
-  createdAt       DateTime  @default(now())
-  
+  id             String   @id @default(uuid())
+  symbol         String
+  headline       String   @db.Text
+  sentimentScore Float    @map("sentiment_score") // -1 to +1
+  source         String
+  publishedAt    DateTime @map("published_at")
+
+  createdAt DateTime @default(now())
+
   @@index([symbol, publishedAt])
   @@index([publishedAt])
   @@map("news_sentiments")
